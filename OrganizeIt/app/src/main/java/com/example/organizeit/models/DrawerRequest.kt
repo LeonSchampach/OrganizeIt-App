@@ -1,6 +1,5 @@
 package com.example.organizeit.models
 
-data class Drawer(
-    //val id: String,
+data class DrawerRequest(
     val name: String
 )
