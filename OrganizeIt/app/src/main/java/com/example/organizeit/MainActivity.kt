@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         private const val TAG = "MainActivity"
     }
 
+    private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
     private val shelfList = mutableListOf<Shelf>()
 
@@ -35,13 +36,20 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView = findViewById(R.id.recyclerView)
         shelfAdapter = ShelfAdapter(shelfList)
         recyclerView.adapter = shelfAdapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val fab: FloatingActionButton = findViewById(R.id.fab)
-        fab.setOnClickListener {
+        // Add sample data
+        val sampleDrawers = mutableListOf(Drawer("Drawer 1"), Drawer("Drawer 2"))
+        shelfList.add(Shelf("Shelf 1", "Room A", sampleDrawers))
+        shelfList.add(Shelf("Shelf 2", "Room B", sampleDrawers))
+
+        shelfAdapter.notifyDataSetChanged()
+
+        // Floating action button click listener for adding a new shelf
+        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             showAddShelfDialog()
         }
     }

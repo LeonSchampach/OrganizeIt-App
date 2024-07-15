@@ -1,67 +1,52 @@
 package com.example.organizeit.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.R
+import com.example.organizeit.databinding.ItemDrawerBinding
+import com.example.organizeit.databinding.ItemShelfBinding
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.models.Drawer
 
 class ShelfAdapter(private val shelfList: MutableList<Shelf>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
-        private const val ITEM_TYPE_SHELF = 0
-        private const val ITEM_TYPE_DRAWER = 1
+        const val ITEM_TYPE_SHELF = 0
+        const val ITEM_TYPE_DRAWER = 1
     }
-
-    override fun getItemViewType(position: Int): Int {
-        var count = 0
-
-        for (i in 0 until shelfList.size) {
-            if (position == count) {
-                return ITEM_TYPE_SHELF // First item is always a shelf
-            }
-
-            count++ // Increment for the shelf itself
-
-            if (!shelfList[i].drawers.isEmpty()) {
-                // Increment for each drawer in the current shelf
-                count += shelfList[i].drawers.size
-
-                if (position < count) {
-                    return ITEM_TYPE_DRAWER // Found a drawer item
-                }
-            }
-        }
-
-        throw IndexOutOfBoundsException("Invalid position: $position")
-    }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == ITEM_TYPE_SHELF) {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.shelf_item, parent, false)
-            ShelfViewHolder(view)
+            val binding = ItemShelfBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            ShelfViewHolder(binding)
         } else {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.drawer_item, parent, false)
-            DrawerViewHolder(view)
+            val binding = ItemDrawerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            DrawerViewHolder(binding)
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val itemPosition = getItemPosition(position)
         if (holder is ShelfViewHolder) {
-            holder.bind(shelfList[getShelfPosition(position)])
+            holder.bind(shelfList[itemPosition])
         } else if (holder is DrawerViewHolder) {
-            holder.bind(shelfList[getShelfPosition(position)].drawers[position - 1])
+            val shelfIndex = getShelfPosition(position)
+            val drawerIndex = getDrawerPosition(position, shelfIndex)
+            holder.bind(shelfList[shelfIndex].drawers[drawerIndex])
         }
     }
 
     override fun getItemCount(): Int {
-        var count = shelfList.size
-        shelfList.forEach { shelf ->
-            count += shelf.drawers.size
+        var count = 0
+        for (shelf in shelfList) {
+            count++ // For the shelf itself
+            if (shelf.isExpanded) {
+                count += shelf.drawers.size // Add drawers if the shelf is expanded
+            }
         }
         return count
     }
@@ -71,45 +56,92 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>) : RecyclerView.Ada
         notifyItemInserted(shelfList.size - 1)
     }
 
+    override fun getItemViewType(position: Int): Int {
+        return if (isShelf(position)) {
+            ITEM_TYPE_SHELF
+        } else {
+            ITEM_TYPE_DRAWER
+        }
+    }
+
+    private fun isShelf(position: Int): Boolean {
+        var count = 0
+        for (shelf in shelfList) {
+            if (position == count) {
+                return true
+            }
+            count++
+            if (shelf.isExpanded) {
+                count += shelf.drawers.size
+            }
+        }
+        return false
+    }
+
     private fun getShelfPosition(adapterPosition: Int): Int {
         var count = 0
-
-        for (i in 0 until shelfList.size) {
-            if (adapterPosition == count) {
-                return i // Return shelf index if adapterPosition matches count
+        for (i in shelfList.indices) {
+            //Log.d("ShelfAdapter", "Checking shelf position: $i, count: $count, adapterPosition: $adapterPosition")
+            /*if (adapterPosition == count) {
+                Log.d("ShelfAdapter", "Found shelf at position: $i")
+                return i
             }
+            */
+            count++
+            if (shelfList[i].isExpanded) {
+                //count += shelfList[i].drawers.size
 
-            count++ // Increment count for the shelf itself
-
-            if (!shelfList[i].drawers.isEmpty()) {
-                count += shelfList[i].drawers.size // Increment count for each drawer in the shelf
-
-                if (adapterPosition < count) {
-                    return i // Return shelf index if adapterPosition is within the range of drawers
+                for (j in shelfList[i].drawers.indices) {
+                    if (adapterPosition == count){
+                        return i;
+                    }
+                    count++
                 }
             }
         }
-
-        return -1 // Default return if adapterPosition is out of bounds
+        //Log.e("ShelfAdapter", "No shelf found for adapterPosition: $adapterPosition")
+        return -1
     }
 
+    private fun getItemPosition(adapterPosition: Int): Int {
+        var count = 0
+        for (i in shelfList.indices) {
+            if (adapterPosition == count) {
+                return i
+            }
+            count++
+            if (shelfList[i].isExpanded) {
+                count += shelfList[i].drawers.size
+            }
+        }
+        return -1
+    }
 
-    inner class ShelfViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val shelfName: TextView = itemView.findViewById(R.id.shelfName)
+    private fun getDrawerPosition(adapterPosition: Int, shelfIndex: Int): Int {
+        var count = 0
+        for (i in 0 until shelfIndex) {
+            count++
+            if (shelfList[i].isExpanded) {
+                count += shelfList[i].drawers.size
+            }
+        }
+        return adapterPosition - count - 1
+    }
 
+    inner class ShelfViewHolder(private val binding: ItemShelfBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(shelf: Shelf) {
-            shelfName.text = shelf.name
-            itemView.setOnClickListener {
-                // Handle shelf item click if needed
+            binding.shelfName.text = shelf.name
+            binding.shelfRoom.text = shelf.room
+            binding.root.setOnClickListener {
+                shelf.isExpanded = !shelf.isExpanded
+                notifyDataSetChanged()
             }
         }
     }
 
-    inner class DrawerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val drawerName: TextView = itemView.findViewById(R.id.drawerName)
-
+    inner class DrawerViewHolder(private val binding: ItemDrawerBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(drawer: Drawer) {
-            drawerName.text = drawer.name
+            binding.drawerName.text = drawer.name
         }
     }
 }
