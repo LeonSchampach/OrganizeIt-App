@@ -19,6 +19,12 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>) : RecyclerView.Ada
         const val ITEM_TYPE_DRAWER = 1
     }
 
+    fun setShelves(shelves: List<Shelf>) {
+        shelfList.clear()
+        shelfList.addAll(shelves)
+        notifyDataSetChanged()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == ITEM_TYPE_SHELF) {
             val binding = ItemShelfBinding.inflate(LayoutInflater.from(parent.context), parent, false)

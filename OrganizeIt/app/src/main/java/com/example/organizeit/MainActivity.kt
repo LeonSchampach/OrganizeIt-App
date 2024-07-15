@@ -18,9 +18,12 @@ import com.example.organizeit.network.RetrofitClient
 import com.example.organizeit.models.ShelfRequest
 import com.example.organizeit.models.DrawerRequest
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import okhttp3.*
+import org.json.JSONArray
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,11 +45,13 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         // Add sample data
-        val sampleDrawers = mutableListOf(Drawer("Drawer 1"), Drawer("Drawer 2"))
-        shelfList.add(Shelf("Shelf 1", "Room A", sampleDrawers))
-        shelfList.add(Shelf("Shelf 2", "Room B", sampleDrawers))
+        val sampleDrawers = mutableListOf(Drawer(null, "Drawer 1"), Drawer(null, "Drawer 2"))
+        shelfList.add(Shelf(null, "Shelf 1", "Room A", sampleDrawers))
+        shelfList.add(Shelf(null, "Shelf 2", "Room B", sampleDrawers))
 
         shelfAdapter.notifyDataSetChanged()
+
+        fetchShelves()
 
         // Floating action button click listener for adding a new shelf
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
@@ -107,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     Toast.makeText(this@MainActivity, "Shelf added successfully", Toast.LENGTH_SHORT).show()
                     Log.d(TAG, "Shelf added successfully")
-                    val newShelf = Shelf(name, room, drawers.map { Drawer(it.name) })
+                    val newShelf = Shelf(null, name, room, drawers.map { Drawer(null, it.name) })
                     shelfAdapter.addShelf(newShelf)
                 } else {
                     Toast.makeText(this@MainActivity, "Failed to add shelf", Toast.LENGTH_SHORT).show()
@@ -121,4 +126,63 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+    private fun fetchShelves() {
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("http://192.168.1.106:8080/api/getAllShelf")
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error fetching shelves", Toast.LENGTH_SHORT).show()
+                    Log.e("MainActivity", "Error fetching shelves", e)
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (!response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Error fetching shelves", Toast.LENGTH_SHORT).show()
+                        Log.e("MainActivity", "Error fetching shelves: ${response.code}")
+                    }
+                } else {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val shelfList = parseShelves(responseBody)
+                        runOnUiThread {
+                            shelfAdapter.setShelves(shelfList)
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private fun parseShelves(jsonString: String): List<Shelf> {
+        val jsonArray = JSONArray(jsonString)
+        val shelves = mutableListOf<Shelf>()
+
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            val id = jsonObject.optInt("id", -1).takeIf { it != -1 }
+            val name = jsonObject.getString("name")
+            val room = jsonObject.getString("room")
+            val drawersJsonArray = jsonObject.getJSONArray("drawers")
+
+            val drawers = mutableListOf<Drawer>()
+            for (j in 0 until drawersJsonArray.length()) {
+                val drawerJsonObject = drawersJsonArray.getJSONObject(j)
+                val drawerId = drawerJsonObject.optInt("id", -1).takeIf { it != -1 }
+                val drawerName = drawerJsonObject.getString("name")
+                drawers.add(Drawer(drawerId, drawerName))
+            }
+
+            shelves.add(Shelf(id, name, room, drawers, false))
+        }
+
+        return shelves
+    }
+
 }
