@@ -1,11 +1,13 @@
 package com.example.organizeit.adapters
 
+import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.organizeit.DrawerDetailActivity
 import com.example.organizeit.R
 import com.example.organizeit.databinding.ItemDrawerBinding
 import com.example.organizeit.databinding.ItemShelfBinding
@@ -30,8 +32,10 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>) : RecyclerView.Ada
             val binding = ItemShelfBinding.inflate(LayoutInflater.from(parent.context), parent, false)
             ShelfViewHolder(binding)
         } else {
-            val binding = ItemDrawerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            DrawerViewHolder(binding)
+            /*val binding = ItemDrawerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            DrawerViewHolder(binding)*/
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_drawer, parent, false)
+            DrawerViewHolder(view)
         }
     }
 
@@ -145,9 +149,16 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>) : RecyclerView.Ada
         }
     }
 
-    inner class DrawerViewHolder(private val binding: ItemDrawerBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class DrawerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val drawerName: TextView = itemView.findViewById(R.id.drawerName)
+
         fun bind(drawer: Drawer) {
-            binding.drawerName.text = drawer.name
+            drawerName.text = drawer.name
+            itemView.setOnClickListener {
+                val intent = Intent(itemView.context, DrawerDetailActivity::class.java)
+                intent.putExtra("drawer", drawer)
+                itemView.context.startActivity(intent)
+            }
         }
     }
 }
