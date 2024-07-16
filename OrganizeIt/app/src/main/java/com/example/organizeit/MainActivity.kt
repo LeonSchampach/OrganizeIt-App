@@ -45,11 +45,11 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         // Add sample data
-        val sampleDrawers = mutableListOf(Drawer(null, "Drawer 1"), Drawer(null, "Drawer 2"))
+        /*val sampleDrawers = mutableListOf(Drawer(null, "Drawer 1"), Drawer(null, "Drawer 2"))
         shelfList.add(Shelf(null, "Shelf 1", "Room A", sampleDrawers))
         shelfList.add(Shelf(null, "Shelf 2", "Room B", sampleDrawers))
 
-        shelfAdapter.notifyDataSetChanged()
+        shelfAdapter.notifyDataSetChanged()*/
 
         fetchShelves()
 
