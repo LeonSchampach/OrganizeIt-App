@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.DrawerDetailActivity
@@ -139,7 +140,13 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>) : RecyclerView.Ada
     }
 
     inner class ShelfViewHolder(private val binding: ItemShelfBinding) : RecyclerView.ViewHolder(binding.root) {
+        private val deleteButton: ImageButton = itemView.findViewById(R.id.buttonDeleteShelf)
+
         fun bind(shelf: Shelf) {
+            deleteButton.setOnClickListener {
+                // Handle delete shelf action here
+            }
+
             binding.shelfName.text = shelf.name
             binding.shelfRoom.text = shelf.room
             binding.root.setOnClickListener {
@@ -151,6 +158,7 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>) : RecyclerView.Ada
 
     inner class DrawerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val drawerName: TextView = itemView.findViewById(R.id.drawerName)
+        private val deleteButton: ImageButton = itemView.findViewById(R.id.buttonDeleteDrawer)
 
         fun bind(drawer: Drawer) {
             drawerName.text = drawer.name
@@ -158,6 +166,9 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>) : RecyclerView.Ada
                 val intent = Intent(itemView.context, DrawerDetailActivity::class.java)
                 intent.putExtra("drawer", drawer)
                 itemView.context.startActivity(intent)
+            }
+            deleteButton.setOnClickListener {
+                // Handle delete drawer action here
             }
         }
     }
