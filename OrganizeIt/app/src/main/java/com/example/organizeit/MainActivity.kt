@@ -11,15 +11,20 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.organizeit.DrawerDetailActivity.Companion
 import com.example.organizeit.adapters.ShelfAdapter
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.network.RetrofitClient
 import com.example.organizeit.models.ShelfRequest
 import com.example.organizeit.models.DrawerRequest
+import com.example.organizeit.models.Item
+import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.json.JSONArray
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -103,34 +108,97 @@ class MainActivity : AppCompatActivity() {
         container.addView(drawerInput)
     }
 
-    private fun addShelf(name: String, room: String, drawers: List<DrawerRequest>) {
-        val shelfRequest = ShelfRequest(name, room, drawers)
-        val call = RetrofitClient.instance.createShelf(shelfRequest)
+    private fun parseShelf(jsonString: String): Shelf {
+        val jsonObject = JSONObject(jsonString)
+        val drawersJsonArray = jsonObject.getJSONArray("drawers")
 
-        call.enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                if (response.isSuccessful) {
-                    Toast.makeText(this@MainActivity, "Shelf added successfully", Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, "Shelf added successfully")
-                    val newShelf = Shelf(null, name, room, drawers.map { Drawer(null, it.name) })
-                    shelfAdapter.addShelf(newShelf)
-                } else {
-                    Toast.makeText(this@MainActivity, "Failed to add shelf", Toast.LENGTH_SHORT).show()
-                    Log.e(TAG, "Failed to add shelf: ${response.errorBody()?.string()}")
+        val drawersList = mutableListOf<Drawer>()
+
+        for (i in 0 until drawersJsonArray.length()) {
+            val drawerJson = drawersJsonArray.getJSONObject(i)
+            val drawer = Drawer(
+                id = drawerJson.getInt("id"),
+                name = drawerJson.getString("name"),
+                shelfId = drawerJson.getInt("shelfId")
+            )
+            drawersList.add(drawer)
+        }
+
+        val shelf = Shelf(
+            id = jsonObject.getInt("id"),
+            name = jsonObject.getString("name"),
+            room = jsonObject.getString("room"),
+            drawers = drawersList
+        )
+
+        return shelf
+    }
+
+    private fun addShelf(name: String, room: String, drawers: List<DrawerRequest>) {
+        val jsonArray = JSONArray()
+        for (drawer in drawers) {
+            val drawerJson = JSONObject()
+            drawerJson.put("name", drawer.name)
+            jsonArray.put(drawerJson)
+        }
+        val jsonObject = JSONObject()
+        jsonObject.put("name", name)
+        jsonObject.put("room", room)
+        jsonObject.put("drawers", jsonArray)
+
+        val client = OkHttpClient()
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/createShelf"
+        val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonObject.toString())
+        val request = Request.Builder()
+            .url(apiUrl)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Error adding shelf", e)
                 }
             }
 
-            override fun onFailure(call: Call<Void>, t: Throwable) {
-                Toast.makeText(this@MainActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
-                Log.e(TAG, "Error adding shelf", t)
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Shelf added successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.d(TAG, "Shelf added successfully")
+                    }
+
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val newShelf = parseShelf(responseBody)
+                        runOnUiThread {
+                            shelfAdapter.addShelf(newShelf)
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Failed to add shelf",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e(TAG, "Failed to add shelf: ${response.body.string()}")
+                    }
+                }
             }
         })
     }
 
     private fun fetchShelves() {
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/getAllShelf"
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("http://192.168.1.106:8080/api/getAllShelf")
+            .url(apiUrl)
             .build()
 
         client.newCall(request).enqueue(object : okhttp3.Callback {

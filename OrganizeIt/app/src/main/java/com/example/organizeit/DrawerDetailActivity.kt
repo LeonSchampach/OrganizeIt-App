@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.adapters.ItemAdapter
 import com.example.organizeit.models.Item
 import com.example.organizeit.models.Drawer
+import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -51,9 +52,10 @@ class DrawerDetailActivity : AppCompatActivity() {
     }
 
     private fun fetchItems(drawerId: Int) {
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/getItemsByDrawerId?drawerId=$drawerId"
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("http://192.168.1.106:8080/api/getItemsByDrawerId?drawerId=$drawerId")
+            .url(apiUrl)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -154,10 +156,13 @@ class DrawerDetailActivity : AppCompatActivity() {
         jsonObject.put("quantity", quantity)
         jsonObject.put("drawerId", drawerId)
 
+        Log.i(TAG, jsonObject.toString())
+
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/createItem"
         val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonObject.toString())
 
         val request = Request.Builder()
-            .url("http://192.168.1.106:8080/api/createItem")
+            .url(apiUrl)
             .post(requestBody)
             .build()
 
@@ -179,7 +184,6 @@ class DrawerDetailActivity : AppCompatActivity() {
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
                         val newItem = parseItem(responseBody)
-                        Log.i(TAG, newItem.toString())
                         runOnUiThread {
                             itemAdapter.addItem(newItem)
                         }
