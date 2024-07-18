@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         recyclerView = findViewById(R.id.recyclerView)
-        shelfAdapter = ShelfAdapter(shelfList)
+        shelfAdapter = ShelfAdapter(shelfList, this)
         recyclerView.adapter = shelfAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -244,7 +244,8 @@ class MainActivity : AppCompatActivity() {
                 val drawerJsonObject = drawersJsonArray.getJSONObject(j)
                 val drawerId = drawerJsonObject.optInt("id", -1).takeIf { it != -1 }
                 val drawerName = drawerJsonObject.getString("name")
-                drawers.add(Drawer(drawerId, drawerName))
+                val shelfId = drawerJsonObject.optInt("shelfId")
+                drawers.add(Drawer(drawerId, drawerName, shelfId))
             }
 
             shelves.add(Shelf(id, name, room, drawers, false))
