@@ -15,7 +15,7 @@
         android:text="@string/headline_shelves"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:padding="16dp"/>
 
     <!-- RecyclerView positioned below the headline -->
