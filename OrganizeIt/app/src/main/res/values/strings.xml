@@ -4,4 +4,7 @@
     <string name="headline_shelves">Regale</string>
     <string name="add_item">Item hinzufügen</string>
     <string name="delete_shelf">Regal Löschen</string>
+    <string name="delete_item">Gegenstand Löschen</string>
+    <string name="decrease_quantity">Menge reduzieren</string>
+    <string name="increase_quantity">Menge erhöhen</string>
 </resources>

@@ -23,6 +23,7 @@ import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Call
@@ -48,13 +49,6 @@ class MainActivity : AppCompatActivity() {
         shelfAdapter = ShelfAdapter(shelfList, this)
         recyclerView.adapter = shelfAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
-
-        // Add sample data
-        /*val sampleDrawers = mutableListOf(Drawer(null, "Drawer 1"), Drawer(null, "Drawer 2"))
-        shelfList.add(Shelf(null, "Shelf 1", "Room A", sampleDrawers))
-        shelfList.add(Shelf(null, "Shelf 2", "Room B", sampleDrawers))
-
-        shelfAdapter.notifyDataSetChanged()*/
 
         fetchShelves()
 
@@ -148,7 +142,8 @@ class MainActivity : AppCompatActivity() {
 
         val client = OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/createShelf"
-        val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonObject.toString())
+        val requestBody = jsonObject.toString()
+            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
             .url(apiUrl)
             .post(requestBody)
@@ -187,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                             "Failed to add shelf",
                             Toast.LENGTH_SHORT
                         ).show()
-                        Log.e(TAG, "Failed to add shelf: ${response.body.string()}")
+                        Log.e(TAG, "Failed to add shelf: ${response.body?.string()}")
                     }
                 }
             }

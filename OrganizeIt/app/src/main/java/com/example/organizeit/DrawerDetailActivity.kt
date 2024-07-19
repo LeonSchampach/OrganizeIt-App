@@ -27,6 +27,7 @@ class DrawerDetailActivity : AppCompatActivity() {
 
     private lateinit var itemAdapter: ItemAdapter
     private lateinit var recyclerView: RecyclerView
+    private val itemList = mutableListOf<Item>()
     private var drawerId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +40,7 @@ class DrawerDetailActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.recyclerViewItems)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        itemAdapter = ItemAdapter(mutableListOf())
+        itemAdapter = ItemAdapter(itemList, this)
         recyclerView.adapter = itemAdapter
 
         findViewById<FloatingActionButton>(R.id.fabAddItem).setOnClickListener {
