@@ -120,7 +120,7 @@ class DrawerDetailActivity : AppCompatActivity() {
 
     private fun showAddItemDialog() {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Add New Item")
+        builder.setTitle(getString(R.string.add_item))
 
         val view = layoutInflater.inflate(R.layout.dialog_add_item, null)
         val nameEditText = view.findViewById<EditText>(R.id.editTextItemName)
@@ -129,20 +129,20 @@ class DrawerDetailActivity : AppCompatActivity() {
 
         builder.setView(view)
 
-        builder.setPositiveButton("Save") { dialog, _ ->
+        builder.setPositiveButton(getString(R.string.saveBtn)) { dialog, _ ->
             val name = nameEditText.text.toString()
             val desc = descEditText.text.toString()
             val quantity = quantityEditText.text.toString().toIntOrNull() ?: 1
 
-            if (name.isNotBlank() && desc.isNotBlank()) {
+            if (name.isNotBlank()) {
                 addItem(name, desc, quantity)
             } else {
-                Toast.makeText(this, "Name and Description cannot be empty", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Name cannot be empty", Toast.LENGTH_SHORT).show()
             }
             dialog.dismiss()
         }
 
-        builder.setNegativeButton("Cancel") { dialog, _ ->
+        builder.setNegativeButton(getString(R.string.cancelBtn)) { dialog, _ ->
             dialog.dismiss()
         }
 

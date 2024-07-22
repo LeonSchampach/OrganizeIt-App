@@ -37,7 +37,10 @@ class ItemAdapter(private val itemList: MutableList<Item>, private val context: 
         fun bind(item: Item, context: Context, adapter: ItemAdapter) {
             itemName.text = item.name
             itemQuantity.text = item.quantity.toString()
-            itemDesc.text = item.desc
+            if(item.desc == "")
+                itemDesc.text = context.getString(R.string.noDescriptionAvailable)
+            else
+                itemDesc.text = String.format("%s %s", context.getString(R.string.description), item.desc)
 
             itemView.setOnClickListener {
                 if (itemDesc.visibility == View.GONE) {
@@ -96,6 +99,7 @@ class ItemAdapter(private val itemList: MutableList<Item>, private val context: 
 
     private fun changeQuantity(item: Item, incOrDec: Int, context: Context, adapter: ItemAdapter) {
         val jsonObject = JSONObject()
+        jsonObject.put("id", item.id)
         jsonObject.put("name", item.name)
         jsonObject.put("desc", item.desc)
         jsonObject.put("quantity", item.quantity + incOrDec)

@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
     <style name="Style.OrganizeIt" parent="Theme.MaterialComponents.Light">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>
+    <style name="ArrowButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:padding">0dp</item> <!-- Adjust padding as needed -->
+        <item name="android:minHeight">24dp</item> <!-- Set minimum height -->
+        <item name="android:minWidth">24dp</item> <!-- Set minimum width -->
+        <item name="android:background">?attr/selectableItemBackground</item> <!-- Keep ripple effect normal size -->
     </style>
 </resources>

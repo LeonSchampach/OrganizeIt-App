@@ -3,8 +3,18 @@
     <string name="add_button">Add-Button</string>
     <string name="headline_shelves">Regale</string>
     <string name="add_item">Item hinzufügen</string>
+    <string name="add_shelf">Regal hinzufügen</string>
     <string name="delete_shelf">Regal Löschen</string>
     <string name="delete_item">Gegenstand Löschen</string>
     <string name="decrease_quantity">Menge reduzieren</string>
     <string name="increase_quantity">Menge erhöhen</string>
+    <string name="name">Name</string>
+    <string name="shelf_room">Raum</string>
+    <string name="item_description">Beschreibung</string>
+    <string name="item_quantity">Menge</string>
+    <string name="cancelBtn">Abbrechen</string>
+    <string name="saveBtn">Speichern</string>
+    <string name="noDescriptionAvailable">Keine Beschreibung vorhanden</string>
+    <string name="description">Beschreibung:</string>
+    <string name="item_name">Item Name</string>
 </resources>

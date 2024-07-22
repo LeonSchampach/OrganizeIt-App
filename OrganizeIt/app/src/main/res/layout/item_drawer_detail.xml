@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <TextView
             android:id="@+id/itemName"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Item Name"
-            android:textSize="16sp"
-            android:padding="8dp" />
+            android:layout_weight="1"
+            android:padding="8dp"
+            android:text="@string/item_name"
+            android:textSize="16sp" />
 
         <!--<Button
             android:id="@+id/decreaseQuantity"
@@ -31,16 +31,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_left"
-            android:contentDescription="@string/decrease_quantity"/>
+            android:background="@drawable/ripple_effect"
+            android:padding="0dp"
+            android:contentDescription="@string/decrease_quantity"
+            android:src="@drawable/ic_arrow_left" />
 
         <TextView
             android:id="@+id/itemQuantity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1"
-            android:padding="8dp" />
+            android:padding="8dp"
+            android:text="1" />
 
         <!--<Button
             android:id="@+id/increaseQuantity"
@@ -49,23 +50,26 @@
             android:text="+" />-->
         <ImageButton
             android:id="@+id/increaseQuantity"
+            style="@style/ArrowButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="0dp"
-            android:layout_margin="0dp"
             android:layout_gravity="center_vertical"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_right"
-            android:contentDescription="@string/increase_quantity"/>
+            android:layout_margin="0dp"
+            android:background="@drawable/ripple_effect"
+            android:contentDescription="@string/increase_quantity"
+            android:padding="0dp"
+            android:src="@drawable/ic_arrow_right" />
 
         <ImageButton
             android:id="@+id/deleteItem"
+            style="@style/ArrowButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_delete"
+            android:background="@drawable/delete_btn_ripple_effect"
+            android:padding="0dp"
             android:contentDescription="@string/delete_item"
+            android:src="@drawable/ic_delete"
             app:tint="@android:color/holo_red_dark" />
         <!--<Button
             android:id="@+id/deleteItem"
@@ -79,8 +83,8 @@
         android:id="@+id/itemDesc"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="8dp"
         android:text="Item Description"
-        android:visibility="gone"
-        android:padding="8dp" />
+        android:visibility="gone" />
 
 </LinearLayout>

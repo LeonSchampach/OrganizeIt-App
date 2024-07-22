@@ -33,7 +33,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:background="@drawable/delete_btn_ripple_effect"
+        android:padding="0dp"
         android:src="@drawable/ic_delete"
         android:contentDescription="@string/delete_shelf"
         app:tint="@android:color/holo_red_dark" />

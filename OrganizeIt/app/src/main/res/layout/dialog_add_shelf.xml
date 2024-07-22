@@ -8,14 +8,16 @@
     <EditText
         android:id="@+id/shelfNameInput"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Shelf Name" />
+        android:layout_height="48dp"
+        android:hint="@string/name"
+        android:inputType="textShortMessage" />
 
     <EditText
         android:id="@+id/shelfRoomInput"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Shelf Room" />
+        android:layout_height="48dp"
+        android:hint="@string/shelf_room"
+        android:inputType="textShortMessage" />
 
     <LinearLayout
         android:id="@+id/drawerContainer"
@@ -28,7 +30,7 @@
         android:id="@+id/addDrawerButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add Drawer"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:text="@string/add_shelf" />
 </LinearLayout>

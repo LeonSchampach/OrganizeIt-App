@@ -72,9 +72,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         val dialog = AlertDialog.Builder(this)
-            .setTitle("Add Shelf")
+            .setTitle(getString(R.string.add_shelf))
             .setView(view)
-            .setPositiveButton("Save") { _, _ ->
+            .setPositiveButton(getString(R.string.saveBtn)) { _, _ ->
                 val name = shelfNameInput.text.toString().trim()
                 val room = shelfRoomInput.text.toString().trim()
                 if (name.isNotEmpty() && room.isNotEmpty()) {
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(getString(R.string.cancelBtn), null)
             .create()
 
         dialog.show()

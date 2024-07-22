@@ -8,19 +8,19 @@
     <EditText
         android:id="@+id/editTextItemName"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Item Name" />
+        android:layout_height="48dp"
+        android:hint="@string/name" />
 
     <EditText
         android:id="@+id/editTextItemDesc"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Item Description" />
+        android:layout_height="48dp"
+        android:hint="@string/item_description" />
 
     <EditText
         android:id="@+id/editTextItemQuantity"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Quantity"
+        android:layout_height="48dp"
+        android:hint="@string/item_quantity"
         android:inputType="number" />
 </LinearLayout>
