@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">OrganizeIt</string>
+    <string name="app_name" translatable="false">OrganizeIt</string>
     <string name="add_button">Add-Button</string>
     <string name="headline_shelves">Regale</string>
-    <string name="add_item">Item hinzufügen</string>
+    <string name="add_item">Gegenstand hinzufügen</string>
     <string name="add_shelf">Regal hinzufügen</string>
     <string name="delete_shelf">Regal Löschen</string>
     <string name="delete_item">Gegenstand Löschen</string>
