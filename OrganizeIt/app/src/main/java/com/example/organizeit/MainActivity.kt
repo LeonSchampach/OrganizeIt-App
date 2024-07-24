@@ -1,5 +1,8 @@
 package com.example.organizeit
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,11 +10,14 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.DrawerDetailActivity.Companion
+import com.example.organizeit.activities.LoginActivity
 import com.example.organizeit.adapters.ShelfAdapter
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
@@ -40,10 +46,36 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
     private val shelfList = mutableListOf<Shelf>()
+    private lateinit var loginResultLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        loginResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                val resultValue: Int? = data?.getIntExtra("id", -1)
+                val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
+                val editor = sharedPreferences.edit()
+                if (resultValue != null) {
+                    editor.putInt("id", resultValue)
+                }
+                editor.apply() // or editor.commit()
+
+            }
+        }
+
+        val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
+        val userId = sharedPreferences.getInt("id", -1)
+
+        if (userId == -1) {
+            val intent = Intent(this, LoginActivity::class.java)
+            loginResultLauncher.launch(intent)
+        }
+
+
+        title = getString(R.string.headline_shelves)
 
         recyclerView = findViewById(R.id.recyclerView)
         shelfAdapter = ShelfAdapter(shelfList, this)

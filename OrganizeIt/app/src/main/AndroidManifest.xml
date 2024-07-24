@@ -29,6 +29,10 @@
             android:name=".DrawerDetailActivity"
             android:theme="@style/Style.OrganizeIt">
         </activity>
+        <activity
+            android:name=".activities.LoginActivity"
+            android:theme="@style/Style.OrganizeIt">
+        </activity>
     </application>
 
 </manifest>
