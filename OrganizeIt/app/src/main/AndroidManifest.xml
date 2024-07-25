@@ -33,6 +33,10 @@
             android:name=".activities.LoginActivity"
             android:theme="@style/Style.OrganizeIt">
         </activity>
+        <activity
+            android:name=".activities.RegisterActivity"
+            android:theme="@style/Style.OrganizeIt">
+        </activity>
     </application>
 
 </manifest>

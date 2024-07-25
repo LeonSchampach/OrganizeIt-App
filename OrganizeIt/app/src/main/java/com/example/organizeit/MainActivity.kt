@@ -52,6 +52,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        title = getString(R.string.headline_shelves)
+
+        recyclerView = findViewById(R.id.recyclerView)
+        shelfAdapter = ShelfAdapter(shelfList, this)
+        recyclerView.adapter = shelfAdapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
+
         loginResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data: Intent? = result.data
@@ -63,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 editor.apply() // or editor.commit()
 
+                fetchShelves()
             }
         }
 
@@ -73,16 +81,9 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, LoginActivity::class.java)
             loginResultLauncher.launch(intent)
         }
-
-
-        title = getString(R.string.headline_shelves)
-
-        recyclerView = findViewById(R.id.recyclerView)
-        shelfAdapter = ShelfAdapter(shelfList, this)
-        recyclerView.adapter = shelfAdapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
-        fetchShelves()
+        else {
+            fetchShelves()
+        }
 
         // Floating action button click listener for adding a new shelf
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {

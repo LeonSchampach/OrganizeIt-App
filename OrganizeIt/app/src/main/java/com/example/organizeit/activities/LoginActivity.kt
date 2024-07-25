@@ -65,9 +65,6 @@ class LoginActivity : AppCompatActivity() {
         val mail = findViewById<TextInputEditText>(R.id.tiEmail)
         val password = findViewById<TextInputEditText>(R.id.tiPassword)
 
-        Log.i(TAG, mail.text.toString())
-        Log.i(TAG, mail.text.toString())
-
         val jsonObject = JSONObject()
         jsonObject.put("mail", mail.text)
         jsonObject.put("password", password.text)
