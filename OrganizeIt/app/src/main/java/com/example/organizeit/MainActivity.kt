@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
     private val shelfList = mutableListOf<Shelf>()
-    private lateinit var loginResultLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,36 +58,73 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = shelfAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        loginResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val data: Intent? = result.data
-                val resultValue: Int? = data?.getIntExtra("id", -1)
-                val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
-                val editor = sharedPreferences.edit()
-                if (resultValue != null) {
-                    editor.putInt("id", resultValue)
-                }
-                editor.apply() // or editor.commit()
-
-                fetchShelves()
-            }
-        }
-
         val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
         val userId = sharedPreferences.getInt("id", -1)
 
         if (userId == -1) {
-            val intent = Intent(this, LoginActivity::class.java)
-            loginResultLauncher.launch(intent)
+            register()
         }
-        else {
-            fetchShelves()
-        }
+
+        fetchShelves()
 
         // Floating action button click listener for adding a new shelf
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             showAddShelfDialog()
         }
+    }
+
+    private fun register() {
+        val client = OkHttpClient()
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/user/register"
+        val request = Request.Builder()
+            .url(apiUrl)
+            .get()
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Error registering", e)
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Successfully registered",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.d(TAG, "Successfully registered")
+                    }
+
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val jsonObject = JSONObject(responseBody)
+                        val id = jsonObject.getInt("id")
+                        runOnUiThread {
+                            val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
+                            val editor = sharedPreferences.edit()
+                            if (id != null) {
+                                editor.putInt("id", id)
+                            }
+                            editor.apply()
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Failed to register",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e(TAG, "Failed to register: ${response.body?.string()}")
+                    }
+                }
+            }
+        })
     }
 
     private fun showAddShelfDialog() {
