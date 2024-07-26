@@ -40,60 +40,69 @@ class RegisterActivity : AppCompatActivity() {
         val password = findViewById<TextInputEditText>(R.id.tiPassword)
         val passwordRepeat = findViewById<TextInputEditText>(R.id.tiPasswordRepeat)
 
-        val jsonObject = JSONObject()
-        jsonObject.put("firstname", firstname.text)
-        jsonObject.put("lastname", lastname.text)
-        jsonObject.put("mail", mail.text)
-        jsonObject.put("password", password.text)
+        if (password.text.toString() == passwordRepeat.text.toString()) {
+            val jsonObject = JSONObject()
+            jsonObject.put("firstname", firstname.text)
+            jsonObject.put("lastname", lastname.text)
+            jsonObject.put("mail", mail.text)
+            jsonObject.put("password", password.text)
 
-        val client = OkHttpClient()
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/user/register"
-        val requestBody = jsonObject.toString()
-            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        val request = Request.Builder()
-            .url(apiUrl)
-            .post(requestBody)
-            .build()
+            val client = OkHttpClient()
+            val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/user/register"
+            val requestBody = jsonObject.toString()
+                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+            val request = Request.Builder()
+                .url(apiUrl)
+                .post(requestBody)
+                .build()
 
-        client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                runOnUiThread {
-                    Toast.makeText(this@RegisterActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                    Log.e(TAG, "Error at register", e)
-                }
-            }
-
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                if (response.isSuccessful) {
+            client.newCall(request).enqueue(object : okhttp3.Callback {
+                override fun onFailure(call: okhttp3.Call, e: IOException) {
                     runOnUiThread {
                         Toast.makeText(
                             this@RegisterActivity,
-                            "Register successful",
+                            "Error: ${e.message}",
                             Toast.LENGTH_SHORT
                         ).show()
-                        Log.d(TAG, "Register successful")
-                    }
-
-                    val responseBody = response.body.string()
-                    val jsonResponseObject = JSONObject(responseBody)
-                    val id = jsonResponseObject.getInt("id")
-                    resultIntent.putExtra("id", id)
-                    runOnUiThread {
-                        setResult(Activity.RESULT_OK, resultIntent)
-                        finish()
-                    }
-                } else {
-                    runOnUiThread {
-                        Toast.makeText(
-                            this@RegisterActivity,
-                            "Register failed",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        Log.e(TAG, "Register failed: ${response.body.string()}")
+                        Log.e(TAG, "Error at register", e)
                     }
                 }
-            }
-        })
+
+                override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                    if (response.isSuccessful) {
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@RegisterActivity,
+                                "Register successful",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            Log.d(TAG, "Register successful")
+                        }
+
+                        val responseBody = response.body.string()
+                        val jsonResponseObject = JSONObject(responseBody)
+                        val id = jsonResponseObject.getInt("id")
+                        resultIntent.putExtra("id", id)
+                        runOnUiThread {
+                            setResult(Activity.RESULT_OK, resultIntent)
+                            finish()
+                        }
+                    } else {
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@RegisterActivity,
+                                "Register failed",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            Log.e(TAG, "Register failed: ${response.body.string()}")
+                        }
+                    }
+                }
+            })
+        }
+        else
+            Toast.makeText(this, "Passwords don't match!", Toast.LENGTH_SHORT).show()
+
     }
 
     fun btnReturn() {
