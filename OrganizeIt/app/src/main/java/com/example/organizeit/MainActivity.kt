@@ -1,8 +1,6 @@
 package com.example.organizeit
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,32 +8,27 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.organizeit.DrawerDetailActivity.Companion
-import com.example.organizeit.activities.LoginActivity
 import com.example.organizeit.adapters.ShelfAdapter
 import com.example.organizeit.models.Drawer
-import com.example.organizeit.models.Shelf
-import com.example.organizeit.network.RetrofitClient
-import com.example.organizeit.models.ShelfRequest
 import com.example.organizeit.models.DrawerRequest
-import com.example.organizeit.models.Item
+import com.example.organizeit.models.Shelf
+import com.example.organizeit.models.ShelfList
 import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class MainActivity : AppCompatActivity() {
 
@@ -46,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
     private val shelfList = mutableListOf<Shelf>()
+    private var userId = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
-        val userId = sharedPreferences.getInt("id", -1)
+        userId = sharedPreferences.getInt("id", -1)
 
         if (userId == -1) {
             register()
@@ -198,6 +192,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addShelf(name: String, room: String, drawers: List<DrawerRequest>) {
+        val shelfListId = 1
+
         val jsonArray = JSONArray()
         for (drawer in drawers) {
             val drawerJson = JSONObject()
@@ -207,10 +203,11 @@ class MainActivity : AppCompatActivity() {
         val jsonObject = JSONObject()
         jsonObject.put("name", name)
         jsonObject.put("room", room)
+        jsonObject.put("shelfListId", shelfListId)
         jsonObject.put("drawers", jsonArray)
 
         val client = OkHttpClient()
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/createShelf"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/createShelf"
         val requestBody = jsonObject.toString()
             .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
@@ -259,7 +256,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchShelves() {
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/getAllShelf"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getAllShelf"
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
@@ -269,7 +266,7 @@ class MainActivity : AppCompatActivity() {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 runOnUiThread {
                     Toast.makeText(this@MainActivity, "Error fetching shelves", Toast.LENGTH_SHORT).show()
-                    Log.e("MainActivity", "Error fetching shelves", e)
+                    Log.e(TAG, "Error fetching shelves", e)
                 }
             }
 
@@ -277,7 +274,7 @@ class MainActivity : AppCompatActivity() {
                 if (!response.isSuccessful) {
                     runOnUiThread {
                         Toast.makeText(this@MainActivity, "Error fetching shelves", Toast.LENGTH_SHORT).show()
-                        Log.e("MainActivity", "Error fetching shelves: ${response.code}")
+                        Log.e(TAG, "Error fetching shelves: ${response.code}")
                     }
                 } else {
                     val responseBody = response.body?.string()

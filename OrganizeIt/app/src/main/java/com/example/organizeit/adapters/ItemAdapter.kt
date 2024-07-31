@@ -66,7 +66,7 @@ class ItemAdapter(private val itemList: MutableList<Item>, private val context: 
 
     private fun deleteItem(item: Item, context: Context, adapter: ItemAdapter) {
         val client = OkHttpClient()
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/api/deleteItem?id=${item.id}"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/item/deleteItem?id=${item.id}"
 
         val request = Request.Builder()
             .url(apiUrl)
@@ -106,7 +106,7 @@ class ItemAdapter(private val itemList: MutableList<Item>, private val context: 
         jsonObject.put("drawerId", item.drawerId)
 
         val client = OkHttpClient()
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/api/updateItem"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/item/updateItem"
         val requestBody = jsonObject.toString()
             .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 

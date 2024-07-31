@@ -225,7 +225,7 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>, private val contex
 
     private fun deleteShelf(shelf: Shelf, context: Context, adapter: ShelfAdapter) {
         val client = OkHttpClient()
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/api/deleteShelf?id=${shelf.id}"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/shelf/deleteShelf?id=${shelf.id}"
 
         val request = Request.Builder()
             .url(apiUrl)
@@ -258,7 +258,7 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>, private val contex
 
     private fun deleteDrawer(drawer: Drawer, context: Context, adapter: ShelfAdapter) {
         val client = OkHttpClient()
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/api/deleteDrawer?id=${drawer.id}"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/drawer/deleteDrawer?id=${drawer.id}"
 
         val request = Request.Builder()
             .url(apiUrl)

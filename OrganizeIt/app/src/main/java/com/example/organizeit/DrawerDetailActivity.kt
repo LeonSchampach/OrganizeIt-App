@@ -53,7 +53,7 @@ class DrawerDetailActivity : AppCompatActivity() {
     }
 
     private fun fetchItems(drawerId: Int) {
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/getItemsByDrawerId?drawerId=$drawerId"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/item/getItemsByDrawerId?drawerId=$drawerId"
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
@@ -159,7 +159,7 @@ class DrawerDetailActivity : AppCompatActivity() {
 
         Log.i(TAG, jsonObject.toString())
 
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/api/createItem"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/item/createItem"
         val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonObject.toString())
 
         val request = Request.Builder()
