@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.adapters.ShelfAdapter
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.DrawerRequest
+import com.example.organizeit.models.Item
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.models.ShelfList
 import com.example.organizeit.util.ConfigUtil
@@ -30,7 +31,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
 
     companion object {
         private const val TAG = "MainActivity"
@@ -48,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         title = getString(R.string.headline_shelves)
 
         recyclerView = findViewById(R.id.recyclerView)
-        shelfAdapter = ShelfAdapter(shelfList, this)
+        shelfAdapter = ShelfAdapter(shelfList, this, this)
         recyclerView.adapter = shelfAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -65,6 +66,10 @@ class MainActivity : AppCompatActivity() {
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             showAddShelfDialog()
         }
+    }
+
+    override fun onItemLongClick(shelf: Shelf) {
+        showEditShelfDialog(shelf)
     }
 
     private fun register() {
@@ -131,7 +136,7 @@ class MainActivity : AppCompatActivity() {
         val addDrawerButton = view.findViewById<Button>(R.id.addDrawerButton)
 
         addDrawerButton.setOnClickListener {
-            addDrawerInput(drawerContainer)
+            addDrawerInput(drawerContainer, null)
         }
 
         val dialog = AlertDialog.Builder(this)
@@ -159,9 +164,54 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun addDrawerInput(container: LinearLayout) {
+    private fun showEditShelfDialog(shelf: Shelf) {
+        val inflater = LayoutInflater.from(this)
+        val view = inflater.inflate(R.layout.dialog_add_shelf, null)
+
+        val shelfNameInput = view.findViewById<EditText>(R.id.shelfNameInput)
+        val shelfRoomInput = view.findViewById<EditText>(R.id.shelfRoomInput)
+        val drawerContainer = view.findViewById<LinearLayout>(R.id.drawerContainer)
+        val addDrawerButton = view.findViewById<Button>(R.id.addDrawerButton)
+
+        for (drawer: Drawer in shelf.drawers) {
+            addDrawerInput(drawerContainer, drawer.name)
+        }
+
+        addDrawerButton.setOnClickListener {
+            addDrawerInput(drawerContainer, null)
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.add_shelf))
+            .setView(view)
+            .setPositiveButton(getString(R.string.saveBtn)) { _, _ ->
+                val name = shelfNameInput.text.toString().trim()
+                val room = shelfRoomInput.text.toString().trim()
+                if (name.isNotEmpty() && room.isNotEmpty()) {
+                    val drawers = mutableListOf<DrawerRequest>()
+                    for (i in 0 until drawerContainer.childCount) {
+                        val drawerName = (drawerContainer.getChildAt(i) as EditText).text.toString().trim()
+                        if (drawerName.isNotEmpty()) {
+                            drawers.add(DrawerRequest(drawerName))
+                        }
+                    }
+                    addShelf(name, room, drawers)
+                } else {
+                    Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(getString(R.string.cancelBtn), null)
+            .create()
+
+        dialog.show()
+    }
+
+    private fun addDrawerInput(container: LinearLayout, name: String?) {
         val drawerInput = EditText(this)
-        drawerInput.hint = "Drawer Name"
+        drawerInput.hint = getString(R.string.drawer_name)
+        if(name != null) {
+            drawerInput.setText(name)
+        }
         container.addView(drawerInput)
     }
 

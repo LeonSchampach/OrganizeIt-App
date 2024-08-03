@@ -3,7 +3,10 @@
     <string name="add_button">Add-Button</string>
     <string name="headline_shelves">Regale</string>
     <string name="add_item">Gegenstand hinzufügen</string>
+    <string name="edit_item">Gegenstand bearbeiten</string>
     <string name="add_shelf">Regal hinzufügen</string>
+    <string name="add_drawer">Lade Hinzufügen</string>
+    <string name="drawer_name">Name der Lade</string>
     <string name="delete_shelf">Regal Löschen</string>
     <string name="delete_item">Gegenstand Löschen</string>
     <string name="decrease_quantity">Menge reduzieren</string>

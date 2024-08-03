@@ -6,6 +6,12 @@
     android:orientation="vertical"
     android:padding="0dp">
 
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Search items" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewItems"
         android:layout_width="match_parent"

@@ -13,8 +13,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.DrawerDetailActivity
 import com.example.organizeit.MainActivity
 import com.example.organizeit.R
+import com.example.organizeit.adapters.ItemAdapter.OnItemLongClickListener
 import com.example.organizeit.databinding.ItemShelfBinding
 import com.example.organizeit.models.Drawer
+import com.example.organizeit.models.Item
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.util.ConfigUtil
 import okhttp3.Call
@@ -26,11 +28,19 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
 
-class ShelfAdapter(private val shelfList: MutableList<Shelf>, private val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class ShelfAdapter(
+    private val shelfList: MutableList<Shelf>,
+    private val context: Context,
+    private val listener: OnItemLongClickListener
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         const val ITEM_TYPE_SHELF = 0
         const val ITEM_TYPE_DRAWER = 1
+    }
+
+    interface OnItemLongClickListener {
+        fun onItemLongClick(shelf: Shelf)
     }
 
     fun setShelves(shelves: List<Shelf>) {
@@ -202,6 +212,11 @@ class ShelfAdapter(private val shelfList: MutableList<Shelf>, private val contex
 
             deleteButton.setOnClickListener {
                 deleteShelf(shelf, context, adapter)
+            }
+
+            itemView.setOnLongClickListener {
+                listener.onItemLongClick(shelf)
+                true
             }
         }
     }
