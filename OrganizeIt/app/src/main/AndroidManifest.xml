@@ -37,6 +37,10 @@
             android:name=".activities.RegisterActivity"
             android:theme="@style/Style.OrganizeIt">
         </activity>
+        <activity
+            android:name=".MoveItemActivity"
+            android:theme="@style/Style.OrganizeIt">
+        </activity>
     </application>
 
 </manifest>

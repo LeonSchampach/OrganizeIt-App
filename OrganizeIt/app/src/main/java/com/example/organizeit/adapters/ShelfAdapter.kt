@@ -32,7 +32,7 @@ import java.io.IOException
 class ShelfAdapter(
     private val shelfList: MutableList<Shelf>,
     private val context: Context,
-    private val listener: OnItemLongClickListener
+    private val listener: OnItemLongClickListener?
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -229,7 +229,7 @@ class ShelfAdapter(
             }
 
             itemView.setOnLongClickListener {
-                listener.onItemLongClick(shelf)
+                listener?.onItemLongClick(shelf)
                 true
             }
         }

@@ -234,6 +234,7 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
 
         container.addView(drawerInputLayout)
     }
+
     private fun editDrawerInput(container: LinearLayout, drawer: Drawer) {
         val inflater = LayoutInflater.from(this)
         val drawerInputLayout = inflater.inflate(R.layout.item_drawer_input, container, false)

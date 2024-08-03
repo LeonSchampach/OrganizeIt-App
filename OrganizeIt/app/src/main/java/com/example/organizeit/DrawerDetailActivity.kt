@@ -1,14 +1,21 @@
 package com.example.organizeit
 
+import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.organizeit.activities.RegisterActivity
 import com.example.organizeit.adapters.ItemAdapter
 import com.example.organizeit.models.Item
 import com.example.organizeit.models.Drawer
@@ -29,12 +36,26 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
     private lateinit var itemAdapter: ItemAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
+    private lateinit var oldItem: Item
+    private lateinit var newItem: Item
     private val itemList = mutableListOf<Item>()
     private var drawerId: Int = -1
+
+
+    private lateinit var moveItemResultLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_drawer_detail)
+
+        moveItemResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                val drawerId: Int? = data?.getIntExtra("id", -1)
+
+                newItem.id?.let { updateItem(it, newItem.name, newItem.desc, newItem.quantity, drawerId, oldItem) }
+            }
+        }
 
         val drawer = intent.getSerializableExtra("drawer") as? Drawer
         title = drawer?.name
@@ -181,10 +202,22 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
         val builder = AlertDialog.Builder(this)
         builder.setTitle(getString(R.string.edit_item))
 
+        oldItem = item
+        newItem = item
+
         val view = layoutInflater.inflate(R.layout.dialog_add_item, null)
         val nameEditText = view.findViewById<EditText>(R.id.editTextItemName)
         val descEditText = view.findViewById<EditText>(R.id.editTextItemDesc)
         val quantityEditText = view.findViewById<EditText>(R.id.editTextItemQuantity)
+        val moveItemButton = view.findViewById<Button>(R.id.moveItemButton)
+
+        moveItemButton.setOnClickListener {
+            newItem.name = nameEditText.text.toString()
+            newItem.desc = descEditText.text.toString()
+            newItem.quantity = quantityEditText.text.toString().toIntOrNull() ?: 1
+            val intent = Intent(this, MoveItemActivity::class.java)
+            moveItemResultLauncher.launch(intent)
+        }
 
         nameEditText.setText(item.name)
         descEditText.setText(item.desc)
@@ -198,7 +231,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
             val quantity = quantityEditText.text.toString().toIntOrNull() ?: 1
 
             if (name.isNotBlank()) {
-                item.id?.let { updateItem(it, name, desc, quantity, item) }
+                item.id?.let { updateItem(it, name, desc, quantity, null, item) }
             } else {
                 Toast.makeText(this, "Name cannot be empty", Toast.LENGTH_SHORT).show()
             }
@@ -257,14 +290,17 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
         })
     }
 
-    private fun updateItem(id: Int, name: String, desc: String, quantity: Int, oldItem: Item) {
+    private fun updateItem(id: Int, name: String, desc: String, quantity: Int, newDrawerId: Int?, oldItem: Item) {
         val client = OkHttpClient()
         val jsonObject = JSONObject()
         jsonObject.put("id", id)
         jsonObject.put("name", name)
         jsonObject.put("desc", desc)
         jsonObject.put("quantity", quantity)
-        jsonObject.put("drawerId", drawerId)
+        if (newDrawerId == null)
+            jsonObject.put("drawerId", drawerId)
+        else
+            jsonObject.put("drawerId", newDrawerId)
 
         Log.i(TAG, jsonObject.toString())
 
