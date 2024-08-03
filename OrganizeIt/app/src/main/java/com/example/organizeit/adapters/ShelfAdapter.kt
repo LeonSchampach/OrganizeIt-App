@@ -1,5 +1,6 @@
 package com.example.organizeit.adapters
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -92,6 +93,19 @@ class ShelfAdapter(
             }
         }
         notifyItemInserted(position)
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun updateShelf(oldShelf: Shelf, newShelf: Shelf) {
+        val index = shelfList.indexOf(oldShelf)
+        shelfList[index] = newShelf
+        //val fullIndex = fullItemList.indexOf(oldItem)
+        //fullItemList[fullIndex] = newItem
+        notifyItemChanged(index)
+
+        shelfList.sortBy { it.name }
+        //fullItemList.sortBy { it.name }
+        notifyDataSetChanged()
     }
 
     fun removeShelf(shelf: Shelf) {

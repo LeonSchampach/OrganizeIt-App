@@ -30,4 +30,6 @@
     <string name="password_requirements">
         Passwort Requirements:\n Länge: 8 \n min 1. Großbuchstabe \n min 1. Sonderzeichen
     </string>
+    <string name="delete_drawer">Lade Löschen</string>
+    <string name="move_item">Gegenstand verschieben</string>
 </resources>
