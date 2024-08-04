@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.organizeit.activities.RegisterActivity
 import com.example.organizeit.adapters.ItemAdapter
 import com.example.organizeit.models.Item
 import com.example.organizeit.models.Drawer
@@ -140,7 +139,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
             id = jsonObject.getInt("id"),
             name = jsonObject.getString("name"),
             desc = jsonObject.getString("desc"),
-            quantity = jsonObject.getInt("quantity"),
+            quantity = jsonObject.getDouble("quantity"),
             drawerId = jsonObject.getInt("drawerId")
         )
 
@@ -157,7 +156,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
                 id = jsonObject.getInt("id"),
                 name = jsonObject.getString("name"),
                 desc = jsonObject.getString("desc"),
-                quantity = jsonObject.getInt("quantity"),
+                quantity = jsonObject.getDouble("quantity"),
                 drawerId = jsonObject.getInt("drawerId")
             )
             itemList.add(item)
@@ -184,7 +183,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
         builder.setPositiveButton(getString(R.string.saveBtn)) { dialog, _ ->
             val name = nameEditText.text.toString()
             val desc = descEditText.text.toString()
-            val quantity = quantityEditText.text.toString().toIntOrNull() ?: 1
+            val quantity = quantityEditText.text.toString().toDoubleOrNull() ?: 1.0
 
             if (name.isNotBlank()) {
                 addItem(name, desc, quantity)
@@ -217,7 +216,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
         moveItemButton.setOnClickListener {
             newItem.name = nameEditText.text.toString()
             newItem.desc = descEditText.text.toString()
-            newItem.quantity = quantityEditText.text.toString().toIntOrNull() ?: 1
+            newItem.quantity = quantityEditText.text.toString().toDoubleOrNull() ?: 1.0
             val intent = Intent(this, MoveItemActivity::class.java)
             moveItemResultLauncher.launch(intent)
         }
@@ -231,7 +230,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
         builder.setPositiveButton(getString(R.string.saveBtn)) { dialog, _ ->
             val name = nameEditText.text.toString()
             val desc = descEditText.text.toString()
-            val quantity = quantityEditText.text.toString().toIntOrNull() ?: 1
+            val quantity = quantityEditText.text.toString().toDoubleOrNull() ?: 1.0
 
             if (name.isNotBlank()) {
                 item.id?.let { updateItem(it, name, desc, quantity, null, item) }
@@ -248,7 +247,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
         builder.create().show()
     }
 
-    private fun addItem(name: String, desc: String, quantity: Int) {
+    private fun addItem(name: String, desc: String, quantity: Double) {
         val client = OkHttpClient()
         val jsonObject = JSONObject()
         jsonObject.put("name", name)
@@ -293,7 +292,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
         })
     }
 
-    private fun updateItem(id: Int, name: String, desc: String, quantity: Int, newDrawerId: Int?, oldItem: Item) {
+    private fun updateItem(id: Int, name: String, desc: String, quantity: Double, newDrawerId: Int?, oldItem: Item) {
         val client = OkHttpClient()
         val jsonObject = JSONObject()
         jsonObject.put("id", id)

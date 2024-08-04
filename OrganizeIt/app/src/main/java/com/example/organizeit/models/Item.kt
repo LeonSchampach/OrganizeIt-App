@@ -4,6 +4,6 @@ data class Item(
     val id: Int? = null,
     var name: String,
     var desc: String,
-    var quantity: Int,
+    var quantity: Double,
     val drawerId: Int
 )
