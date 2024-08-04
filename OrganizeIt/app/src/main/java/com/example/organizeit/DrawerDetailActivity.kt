@@ -55,6 +55,7 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
 
                 newItem.id?.let { updateItem(it, newItem.name, newItem.desc, newItem.quantity, drawerId, oldItem) }
             }
+            finish()
         }
 
         val drawer = intent.getSerializableExtra("drawer") as? Drawer
@@ -175,6 +176,8 @@ class DrawerDetailActivity : AppCompatActivity(), ItemAdapter.OnItemLongClickLis
         val nameEditText = view.findViewById<EditText>(R.id.editTextItemName)
         val descEditText = view.findViewById<EditText>(R.id.editTextItemDesc)
         val quantityEditText = view.findViewById<EditText>(R.id.editTextItemQuantity)
+
+        view.findViewById<Button>(R.id.moveItemButton).visibility = View.GONE
 
         builder.setView(view)
 
