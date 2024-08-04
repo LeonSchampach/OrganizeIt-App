@@ -23,6 +23,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import java.util.Locale
 
 class ItemAdapter(
     private var itemList: MutableList<Item>,
@@ -46,7 +47,7 @@ class ItemAdapter(
 
         fun bind(item: Item, context: Context, adapter: ItemAdapter) {
             itemName.text = item.name
-            itemQuantity.text = item.quantity.toString()
+            itemQuantity.text = formatNumber(item.quantity)
             if (item.desc == "")
                 itemDesc.text = context.getString(R.string.noDescriptionAvailable)
             else
@@ -76,6 +77,14 @@ class ItemAdapter(
             deleteItem.setOnClickListener {
                 deleteItem(item, context, adapter)
             }
+        }
+    }
+
+    private fun formatNumber(number: Double): String {
+        return if (number == number.toLong().toDouble()) {
+            String.format(Locale.getDefault(), "%d", number.toLong())
+        } else {
+            String.format(Locale.getDefault(), "%s", number)
         }
     }
 
