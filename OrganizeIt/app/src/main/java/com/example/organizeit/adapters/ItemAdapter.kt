@@ -6,12 +6,16 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.DrawerDetailActivity
 import com.example.organizeit.R
+import com.example.organizeit.interfaces.ItemSelectionListener
+import com.example.organizeit.interfaces.MenuVisibilityListener
+import com.example.organizeit.interfaces.OnItemLongClickListener
 import com.example.organizeit.models.Item
 import com.example.organizeit.util.ConfigUtil
 import okhttp3.Call
@@ -28,14 +32,14 @@ import java.util.Locale
 class ItemAdapter(
     private var itemList: MutableList<Item>,
     private val context: Context,
-    private val listener: OnItemLongClickListener
+    private val listener: OnItemLongClickListener,
+    private val menuVisibilityListener: MenuVisibilityListener,
+    private val itemSelectionListener: ItemSelectionListener
 ) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
     private var fullItemList: MutableList<Item> = itemList.toMutableList()
 
-    interface OnItemLongClickListener {
-        fun onItemLongClick(item: Item)
-    }
+    private val selectedItems = mutableListOf<Item>()
 
     inner class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val itemName: TextView = itemView.findViewById(R.id.itemName)
@@ -45,24 +49,52 @@ class ItemAdapter(
         private val decreaseQuantity: ImageButton = itemView.findViewById(R.id.decreaseQuantity)
         private val deleteItem: ImageButton = itemView.findViewById(R.id.deleteItem)
 
+        private val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
+
         fun bind(item: Item, context: Context, adapter: ItemAdapter) {
             itemName.text = item.name
             itemQuantity.text = formatNumber(item.quantity)
-            if (item.desc == "")
-                itemDesc.text = context.getString(R.string.noDescriptionAvailable)
-            else
-                itemDesc.text = String.format("%s %s", context.getString(R.string.description), item.desc)
+            itemDesc.text = if (item.desc.isEmpty()) {
+                context.getString(R.string.noDescriptionAvailable)
+            } else {
+                String.format("%s %s", context.getString(R.string.description), item.desc)
+            }
 
-            itemView.setOnClickListener {
-                if (itemDesc.visibility == View.GONE) {
-                    itemDesc.visibility = View.VISIBLE
-                } else {
-                    itemDesc.visibility = View.GONE
+            if (item.checkboxVisible) {
+                checkBox.visibility = View.VISIBLE
+                itemView.setOnClickListener {
+                    checkBox.isChecked = !checkBox.isChecked
+                }
+            }
+            else {
+                checkBox.visibility = View.GONE
+                itemView.setOnClickListener {
+                    itemDesc.visibility = if (itemDesc.visibility == View.GONE) View.VISIBLE else View.GONE
                 }
             }
 
+            checkBox.isChecked = selectedItems.contains(item)
+            if (item.uncheck) {
+                checkBox.isChecked = false
+                item.uncheck = false
+            }
+
+            checkBox.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    selectedItems.add(item)
+                } else {
+                    selectedItems.remove(item)
+                }
+                itemSelectionListener.onItemsSelected(selectedItems)
+            }
+
             itemView.setOnLongClickListener {
-                listener.onItemLongClick(item)
+                setAllCheckboxesVisible(true)
+                menuVisibilityListener.showMenuItems()
+
+                checkBox.isChecked = true
+
+                //listener.onItemLongClick(item)
                 true
             }
 
@@ -88,7 +120,20 @@ class ItemAdapter(
         }
     }
 
-    private fun deleteItem(item: Item, context: Context, adapter: ItemAdapter) {
+    @SuppressLint("NotifyDataSetChanged")
+    fun setAllCheckboxesVisible(visible: Boolean) {
+        for (item in itemList) {
+            item.checkboxVisible = visible
+        }
+        if (!visible) {
+            for (item in selectedItems) {
+                item.uncheck = true
+            }
+        }
+        notifyDataSetChanged() // Notify the adapter to refresh the views
+    }
+
+    fun deleteItem(item: Item, context: Context, adapter: ItemAdapter) {
         val client = OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/item/deleteItem?id=${item.id}"
 

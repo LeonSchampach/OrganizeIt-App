@@ -14,18 +14,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.DrawerDetailActivity
 import com.example.organizeit.MainActivity
 import com.example.organizeit.R
-import com.example.organizeit.adapters.ItemAdapter.OnItemLongClickListener
 import com.example.organizeit.databinding.ItemShelfBinding
 import com.example.organizeit.models.Drawer
-import com.example.organizeit.models.Item
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.util.ConfigUtil
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
 

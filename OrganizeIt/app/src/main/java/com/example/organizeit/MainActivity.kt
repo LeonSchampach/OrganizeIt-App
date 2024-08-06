@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.adapters.ShelfAdapter
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
         private const val TAG = "MainActivity"
     }
 
+    private lateinit var toolbar: Toolbar
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
     private val shelfList = mutableListOf<Shelf>()
@@ -50,6 +52,9 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
 
         title = getString(R.string.headline_shelves)
 

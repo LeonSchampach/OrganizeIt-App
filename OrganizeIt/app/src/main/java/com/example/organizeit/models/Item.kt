@@ -5,5 +5,7 @@ data class Item(
     var name: String,
     var desc: String,
     var quantity: Double,
-    val drawerId: Int
+    val drawerId: Int,
+    var checkboxVisible: Boolean = false,
+    var uncheck: Boolean = false
 )
