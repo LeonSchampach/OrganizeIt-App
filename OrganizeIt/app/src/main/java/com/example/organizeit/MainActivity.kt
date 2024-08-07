@@ -2,9 +2,11 @@ package com.example.organizeit
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -75,6 +77,18 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
         // Floating action button click listener for adding a new shelf
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             showAddShelfDialog()
+        }
+
+        if (isLightMode()) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        }
+    }
+
+    private fun isLightMode(): Boolean {
+        return when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_NO -> true // Light mode
+            Configuration.UI_MODE_NIGHT_YES -> false // Dark mode
+            else -> false
         }
     }
 

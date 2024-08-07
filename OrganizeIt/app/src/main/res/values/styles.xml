@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-    <style name="Style.OrganizeIt" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Style.OrganizeIt" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>-
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:statusBarColor">@color/statusBarColor</item>
+        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
     </style>
     <style name="ArrowButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:padding">0dp</item> <!-- Adjust padding as needed -->
