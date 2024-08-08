@@ -73,12 +73,14 @@ class ItemAdapter(
                 }
             }
 
-            checkBox.isChecked = selectedItems.contains(item)
+            //checkBox.isChecked = selectedItems.contains(item)
             if (item.uncheck) {
                 checkBox.isChecked = false
                 item.uncheck = false
             }
 
+            checkBox.setOnCheckedChangeListener(null)  // Disable listener to prevent conflicts
+            checkBox.isChecked = selectedItems.contains(item)  // Set initial state
             checkBox.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
                     selectedItems.add(item)
@@ -92,9 +94,17 @@ class ItemAdapter(
                 setAllCheckboxesVisible(true)
                 menuVisibilityListener.showMenuItems()
 
-                checkBox.isChecked = true
+                //checkBox.setOnCheckedChangeListener(null)  // Disable listener
+                checkBox.isChecked = true  // Check the checkbox
+                /*checkBox.setOnCheckedChangeListener { _, isChecked ->  // Re-enable listener
+                    if (isChecked) {
+                        selectedItems.add(item)
+                    } else {
+                        selectedItems.remove(item)
+                    }
+                    itemSelectionListener.onItemsSelected(selectedItems)
+                }*/
 
-                //listener.onItemLongClick(item)
                 true
             }
 
@@ -125,10 +135,13 @@ class ItemAdapter(
         for (item in itemList) {
             item.checkboxVisible = visible
         }
-        if (!visible) {
-            for (item in selectedItems) {
-                item.uncheck = true
-            }
+        notifyDataSetChanged() // Notify the adapter to refresh the views
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun uncheckAllCheckboxes() {
+        for (item in selectedItems) {
+            item.uncheck = true
         }
         notifyDataSetChanged() // Notify the adapter to refresh the views
     }

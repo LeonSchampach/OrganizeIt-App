@@ -338,7 +338,7 @@ class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
 
         builder.setNegativeButton(getString(R.string.cancelBtn)) { dialog, _ ->
             dialog.dismiss()
-            hideCheckboxes()
+            itemAdapter.uncheckAllCheckboxes()
         }
 
         builder.create().show()
