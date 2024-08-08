@@ -164,7 +164,6 @@ class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
                     true
                 }
                 R.id.delete -> {
-                    Toast.makeText(this, "Option 3 selected", Toast.LENGTH_SHORT).show()
                     handleOptionSelection(3)
                     true
                 }

@@ -3,6 +3,7 @@ package com.example.organizeit
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -65,7 +67,7 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
         recyclerView.adapter = shelfAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE)
         userId = sharedPreferences.getInt("id", -1)
 
         if (userId == -1) {
@@ -77,18 +79,6 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
         // Floating action button click listener for adding a new shelf
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             showAddShelfDialog()
-        }
-
-        if (isLightMode()) {
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-        }
-    }
-
-    private fun isLightMode(): Boolean {
-        return when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-            Configuration.UI_MODE_NIGHT_NO -> true // Light mode
-            Configuration.UI_MODE_NIGHT_YES -> false // Dark mode
-            else -> false
         }
     }
 
