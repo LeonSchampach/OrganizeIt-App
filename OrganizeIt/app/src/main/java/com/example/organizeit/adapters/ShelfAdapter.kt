@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -15,7 +16,10 @@ import com.example.organizeit.DrawerDetailActivity
 import com.example.organizeit.MainActivity
 import com.example.organizeit.R
 import com.example.organizeit.databinding.ItemShelfBinding
+import com.example.organizeit.interfaces.MenuVisibilityListener
+import com.example.organizeit.interfaces.ShelfSelectionListener
 import com.example.organizeit.models.Drawer
+import com.example.organizeit.models.Item
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.util.ConfigUtil
 import okhttp3.Call
@@ -28,7 +32,8 @@ import java.io.IOException
 class ShelfAdapter(
     private val shelfList: MutableList<Shelf>,
     private val context: Context,
-    private val listener: OnItemLongClickListener?
+    private val menuVisibilityListener: MenuVisibilityListener,
+    private val shelfSelectionListener: ShelfSelectionListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -36,9 +41,7 @@ class ShelfAdapter(
         const val ITEM_TYPE_DRAWER = 1
     }
 
-    interface OnItemLongClickListener {
-        fun onItemLongClick(shelf: Shelf)
-    }
+    private val selectedShelves = mutableListOf<Shelf>()
 
     fun setShelves(shelves: List<Shelf>) {
         shelfList.clear()
@@ -210,30 +213,85 @@ class ShelfAdapter(
     }
 
     inner class ShelfViewHolder(private val binding: ItemShelfBinding) : RecyclerView.ViewHolder(binding.root) {
-        private val deleteButton: ImageButton = itemView.findViewById(R.id.buttonDeleteShelf)
+        private val checkBox: CheckBox = itemView.findViewById(R.id.shelfCheckBox)
 
         fun bind(shelf: Shelf, context: Context, adapter: ShelfAdapter) {
             binding.shelfName.text = shelf.name
             binding.shelfRoom.text = shelf.room
-            binding.root.setOnClickListener {
+            /*binding.root.setOnClickListener {
                 shelf.isExpanded = !shelf.isExpanded
                 notifyDataSetChanged()
+            }*/
+
+            if (shelf.checkboxVisible) {
+                checkBox.visibility = View.VISIBLE
+                itemView.setOnClickListener {
+                    checkBox.isChecked = !checkBox.isChecked
+                }
+            }
+            else {
+                checkBox.visibility = View.GONE
+                itemView.setOnClickListener {
+                    shelf.isExpanded = !shelf.isExpanded
+                    notifyDataSetChanged()
+                }
             }
 
-            deleteButton.setOnClickListener {
-                deleteShelf(shelf, context, adapter)
+            //checkBox.isChecked = selectedItems.contains(item)
+            if (shelf.uncheck) {
+                checkBox.isChecked = false
+                shelf.uncheck = false
+            }
+
+            checkBox.setOnCheckedChangeListener(null)  // Disable listener to prevent conflicts
+            checkBox.isChecked = selectedShelves.contains(shelf)  // Set initial state
+            checkBox.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    selectedShelves.add(shelf)
+                } else {
+                    selectedShelves.remove(shelf)
+                }
+                shelfSelectionListener.onShelvesSelected(selectedShelves)
             }
 
             itemView.setOnLongClickListener {
-                listener?.onItemLongClick(shelf)
+                setAllCheckboxesVisible(true)
+                menuVisibilityListener.showMenuItems()
+
+                //checkBox.setOnCheckedChangeListener(null)  // Disable listener
+                checkBox.isChecked = true  // Check the checkbox
+                /*checkBox.setOnCheckedChangeListener { _, isChecked ->  // Re-enable listener
+                    if (isChecked) {
+                        selectedItems.add(item)
+                    } else {
+                        selectedItems.remove(item)
+                    }
+                    itemSelectionListener.onItemsSelected(selectedItems)
+                }*/
+
                 true
             }
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
+    fun setAllCheckboxesVisible(visible: Boolean) {
+        for (shelf in shelfList) {
+            shelf.checkboxVisible = visible
+        }
+        notifyDataSetChanged() // Notify the adapter to refresh the views
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun uncheckAllCheckboxes() {
+        for (shelf in selectedShelves) {
+            shelf.uncheck = true
+        }
+        notifyDataSetChanged() // Notify the adapter to refresh the views
+    }
+
     inner class DrawerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val drawerName: TextView = itemView.findViewById(R.id.drawerName)
-        private val deleteButton: ImageButton = itemView.findViewById(R.id.buttonDeleteDrawer)
 
         fun bind(drawer: Drawer, context: Context, adapter: ShelfAdapter) {
             drawerName.text = drawer.name
@@ -242,15 +300,15 @@ class ShelfAdapter(
                 intent.putExtra("drawer", drawer)
                 itemView.context.startActivity(intent)
             }
-            deleteButton.setOnClickListener {
-                deleteDrawer(drawer, context, adapter)
-            }
         }
     }
 
-    private fun deleteShelf(shelf: Shelf, context: Context, adapter: ShelfAdapter) {
+    fun deleteShelf(shelf: Shelf, context: Context) {
         val client = OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/shelf/deleteShelf?id=${shelf.id}"
+
+        selectedShelves.remove(shelf)
+        shelfSelectionListener.onShelvesSelected(selectedShelves)
 
         val request = Request.Builder()
             .url(apiUrl)
@@ -274,7 +332,7 @@ class ShelfAdapter(
                 } else {
                     (context as? MainActivity)?.runOnUiThread {
                         Toast.makeText(context, "Shelf deleted successfully", Toast.LENGTH_SHORT).show()
-                        adapter.removeShelf(shelf)
+                        removeShelf(shelf)
                     }
                 }
             }

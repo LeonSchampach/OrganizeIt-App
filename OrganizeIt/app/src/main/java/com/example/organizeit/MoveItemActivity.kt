@@ -41,7 +41,9 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
-        //supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        toolbar.setNavigationOnClickListener { finish() }
 
         title = getString(R.string.headline_select_drawer)
 
@@ -58,6 +60,17 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
         }
 
         fetchShelves()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if ((application as OrganizeItApplication).isAppInBackground) {
+            // Launch the MainActivity and finish the current activity
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish()
+        }
     }
 
     override fun onDrawerClick(drawer: Drawer) {

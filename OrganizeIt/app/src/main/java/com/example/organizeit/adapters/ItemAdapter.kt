@@ -32,7 +32,6 @@ import java.util.Locale
 class ItemAdapter(
     private var itemList: MutableList<Item>,
     private val context: Context,
-    private val listener: OnItemLongClickListener,
     private val menuVisibilityListener: MenuVisibilityListener,
     private val itemSelectionListener: ItemSelectionListener
 ) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
@@ -47,7 +46,6 @@ class ItemAdapter(
         private val itemDesc: TextView = itemView.findViewById(R.id.itemDesc)
         private val increaseQuantity: ImageButton = itemView.findViewById(R.id.increaseQuantity)
         private val decreaseQuantity: ImageButton = itemView.findViewById(R.id.decreaseQuantity)
-        private val deleteItem: ImageButton = itemView.findViewById(R.id.deleteItem)
 
         private val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
 
@@ -115,10 +113,6 @@ class ItemAdapter(
             decreaseQuantity.setOnClickListener {
                 changeQuantity(item, -1, context, adapter)
             }
-
-            deleteItem.setOnClickListener {
-                deleteItem(item, context, adapter)
-            }
         }
     }
 
@@ -149,6 +143,9 @@ class ItemAdapter(
     fun deleteItem(item: Item, context: Context, adapter: ItemAdapter) {
         val client = OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/item/deleteItem?id=${item.id}"
+
+        selectedItems.remove(item)
+        itemSelectionListener.onItemsSelected(selectedItems)
 
         val request = Request.Builder()
             .url(apiUrl)
@@ -261,16 +258,17 @@ class ItemAdapter(
 
     fun updateItemQuantity(item: Item, incOrDec: Int) {
         val index = itemList.indexOf(item)
-        itemList[index] = Item(item.id, item.name, item.desc, item.quantity + incOrDec, item.drawerId)
-        val fullIndex = fullItemList.indexOf(item)
-        fullItemList[fullIndex] = itemList[index]
-        notifyItemChanged(index)
-    }
+        if (index != -1) {
+            val updatedItem = itemList[index].copy(quantity = item.quantity + incOrDec)
+            itemList[index] = updatedItem
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun updateList(newItems: List<Item>) {
-        itemList = newItems.toMutableList()
-        notifyDataSetChanged()
+            val fullIndex = fullItemList.indexOf(item)
+            if (fullIndex != -1) {
+                fullItemList[fullIndex] = updatedItem
+            }
+
+            notifyItemChanged(index)
+        }
     }
 
     fun removeItem(item: Item) {

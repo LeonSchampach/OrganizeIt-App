@@ -67,7 +67,7 @@
             android:padding="0dp"
             android:src="@drawable/ic_arrow_right" />
 
-        <ImageButton
+        <!--<ImageButton
             android:id="@+id/deleteItem"
             style="@style/ArrowButtonStyle"
             android:layout_width="wrap_content"
@@ -77,12 +77,7 @@
             android:padding="0dp"
             android:contentDescription="@string/delete_item"
             android:src="@drawable/ic_delete"
-            app:tint="@android:color/holo_red_dark" />
-        <!--<Button
-            android:id="@+id/deleteItem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Delete" />-->
+            app:tint="@android:color/holo_red_dark" />-->
 
     </LinearLayout>
 

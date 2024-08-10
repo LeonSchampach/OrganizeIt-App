@@ -2,11 +2,14 @@ package com.example.organizeit
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -16,10 +19,13 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.adapters.ShelfAdapter
+import com.example.organizeit.interfaces.MenuVisibilityListener
+import com.example.organizeit.interfaces.ShelfSelectionListener
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.DrawerRequest
 import com.example.organizeit.models.Item
@@ -41,7 +47,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
+class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelectionListener {
 
     companion object {
         private const val TAG = "MainActivity"
@@ -51,7 +57,9 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
     private val shelfList = mutableListOf<Shelf>()
+    private var selectedShelves: List<Shelf> = emptyList()
     private var userId = -1
+    private var isComingFromBackground = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +71,7 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
         title = getString(R.string.headline_shelves)
 
         recyclerView = findViewById(R.id.recyclerView)
-        shelfAdapter = ShelfAdapter(shelfList, this, this)
+        shelfAdapter = ShelfAdapter(shelfList, this, this, this)
         recyclerView.adapter = shelfAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -74,7 +82,7 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
             register()
         }
 
-        fetchShelves()
+        //fetchShelves()
 
         // Floating action button click listener for adding a new shelf
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
@@ -82,8 +90,95 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
         }
     }
 
-    override fun onItemLongClick(shelf: Shelf) {
-        showEditShelfDialog(shelf)
+    override fun onResume() {
+        super.onResume()
+        if ((application as OrganizeItApplication).isAppInBackground) {
+            // This method is called only when the app is returning from the background
+            onAppReturnedToForeground()
+            (application as OrganizeItApplication).isAppInBackground = false
+        }
+    }
+
+    private fun onAppReturnedToForeground() {
+        fetchShelves()
+    }
+
+    override fun onShelvesSelected(selectedShelves: List<Shelf>) {
+        this.selectedShelves = selectedShelves
+    }
+
+    override fun showMenuItems() {
+        toolbar.menu.findItem(R.id.action_more).isVisible = true
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
+        toolbar.setNavigationOnClickListener { hideCheckboxes() }
+    }
+
+    private fun hideCheckboxes() {
+        shelfAdapter.setAllCheckboxesVisible(false)
+        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        supportActionBar?.setDisplayShowHomeEnabled(false)
+        toolbar.menu.findItem(R.id.action_more).isVisible = false
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_items, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_more -> {
+                // Handle more options click
+                showOptionsMenu()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showOptionsMenu() {
+        val popup = PopupMenu(this, findViewById(R.id.action_more))
+        popup.menuInflater.inflate(R.menu.menu_popup, popup.menu)
+        popup.menu.findItem(R.id.move).isVisible = false
+
+        if (selectedShelves.size == 1) {
+            popup.menu.findItem(R.id.edit).isVisible = true
+        } else {
+            popup.menu.findItem(R.id.edit).isVisible = false
+        }
+
+        if (selectedShelves.isNotEmpty()) {
+            popup.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.edit -> {
+                        handleOptionSelection(1)
+                        true
+                    }
+                    R.id.delete -> {
+                        handleOptionSelection(3)
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }
+
+        popup.show()
+    }
+
+    private fun handleOptionSelection(option: Int) {
+        // Handle the selected items based on the selected option
+        when (option) {
+            1 -> {
+                showEditShelfDialog(selectedShelves[0])
+            }
+            3 -> {
+                for (shelf in selectedShelves) {
+                    shelfAdapter.deleteShelf(shelf, this)
+                }
+            }
+        }
     }
 
     private fun register() {
@@ -202,7 +297,7 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
         val dialog = AlertDialog.Builder(this)
             .setTitle(getString(R.string.add_shelf))
             .setView(view)
-            .setPositiveButton(getString(R.string.saveBtn)) { _, _ ->
+            .setPositiveButton(getString(R.string.saveBtn)) { dialog, _ ->
                 val name = shelfNameInput.text.toString().trim()
                 val room = shelfRoomInput.text.toString().trim()
                 if (name.isNotEmpty() && room.isNotEmpty()) {
@@ -223,8 +318,13 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
                 } else {
                     Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
                 }
+                dialog.dismiss()
+                hideCheckboxes()
             }
-            .setNegativeButton(getString(R.string.cancelBtn), null)
+            .setNegativeButton(getString(R.string.cancelBtn)) { dialog, _ ->
+                dialog.dismiss()
+                shelfAdapter.uncheckAllCheckboxes()
+            }
             .create()
 
         dialog.show()
@@ -425,6 +525,7 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
     }
 
     private fun fetchShelves() {
+        Log.i("HALLO", "fetchShelves() called!")
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getAllShelf"
         val client = OkHttpClient()
         val request = Request.Builder()
@@ -516,5 +617,4 @@ class MainActivity : AppCompatActivity(), ShelfAdapter.OnItemLongClickListener {
             }
         })
     }
-
 }

@@ -31,7 +31,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
-class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
+class DrawerDetailActivity : AppCompatActivity(),
     MenuVisibilityListener, ItemSelectionListener {
 
     companion object {
@@ -57,10 +57,10 @@ class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(false) // Initially hide the navigation icon
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         toolbar.setNavigationOnClickListener {
-            hideCheckboxes()
+            finish()
         }
 
         moveItemResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -72,13 +72,13 @@ class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
                     for (item: Item in selectedItems) {
                         item.id?.let { moveItem(it, item.name, item.desc, item.quantity, drawerId) }
                     }
+                    finish()
                 }
                 else {
                     Toast.makeText(this@DrawerDetailActivity, "Error moving Item", Toast.LENGTH_SHORT).show()
                     Log.e(TAG, "Error updating item")
                 }
             }
-            finish()
         }
 
         val drawer = intent.getSerializableExtra("drawer") as? Drawer
@@ -89,7 +89,7 @@ class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
 
         recyclerView = findViewById(R.id.recyclerViewItems)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        itemAdapter = ItemAdapter(itemList, this, this, this, this)
+        itemAdapter = ItemAdapter(itemList, this, this, this)
         recyclerView.adapter = itemAdapter
 
         findViewById<FloatingActionButton>(R.id.fabAddItem).setOnClickListener {
@@ -119,8 +119,15 @@ class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
         })
     }
 
-    override fun onItemLongClick(item: Item) {
-        showEditItemDialog(item)
+    override fun onResume() {
+        super.onResume()
+        if ((application as OrganizeItApplication).isAppInBackground) {
+            // Launch the MainActivity and finish the current activity
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish()
+        }
     }
 
     override fun onItemsSelected(selectedItems: List<Item>) {
@@ -153,23 +160,26 @@ class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
             popup.menu.findItem(R.id.edit).isVisible = false
         }
 
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.edit -> {
-                    handleOptionSelection(1)
-                    true
+        if (selectedItems.isNotEmpty()) {
+            popup.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.edit -> {
+                        handleOptionSelection(1)
+                        true
+                    }
+                    R.id.move -> {
+                        handleOptionSelection(2)
+                        true
+                    }
+                    R.id.delete -> {
+                        handleOptionSelection(3)
+                        true
+                    }
+                    else -> false
                 }
-                R.id.move -> {
-                    handleOptionSelection(2)
-                    true
-                }
-                R.id.delete -> {
-                    handleOptionSelection(3)
-                    true
-                }
-                else -> false
             }
         }
+
         popup.show()
     }
 
@@ -192,17 +202,14 @@ class DrawerDetailActivity : AppCompatActivity(), OnItemLongClickListener,
     }
 
     private fun hideCheckboxes() {
-        // Hide all checkboxes and set menu items visibility
         itemAdapter.setAllCheckboxesVisible(false)
         toolbar.menu.findItem(R.id.action_more).isVisible = false
-        supportActionBar?.setDisplayHomeAsUpEnabled(false)
-        supportActionBar?.setDisplayShowTitleEnabled(true)
+        toolbar.setNavigationOnClickListener { finish() }
     }
 
     override fun showMenuItems() {
         toolbar.menu.findItem(R.id.action_more).isVisible = true
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
+        toolbar.setNavigationOnClickListener { hideCheckboxes() }
     }
 
     private fun fetchItems(drawerId: Int) {

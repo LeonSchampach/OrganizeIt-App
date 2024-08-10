@@ -6,5 +6,7 @@ data class Shelf(
     val name: String,
     val room: String,
     val drawers: MutableList<Drawer>, // Assuming a list of drawers in a shelf
-    var isExpanded: Boolean = false // Add this flag to track expansion state
+    var isExpanded: Boolean = false, // Add this flag to track expansion state
+    var checkboxVisible: Boolean = false,
+    var uncheck: Boolean = false
 )
