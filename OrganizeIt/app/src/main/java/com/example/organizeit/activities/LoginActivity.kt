@@ -132,6 +132,7 @@ class LoginActivity : AppCompatActivity() {
             val drawer = Drawer(
                 id = drawerJson.getInt("id"),
                 name = drawerJson.getString("name"),
+                order = drawerJson.getInt("order"),
                 shelfId = drawerJson.getInt("shelfId")
             )
             drawersList.add(drawer)

@@ -174,7 +174,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 showEditShelfDialog(selectedShelves[0])
             }
             3 -> {
+                val shelves = mutableListOf<Shelf>()
                 for (shelf in selectedShelves) {
+                    shelves.add(shelf)
+                }
+                for (shelf in shelves) {
                     shelfAdapter.deleteShelf(shelf, this)
                 }
             }
@@ -259,7 +263,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     for (i in 0 until drawerContainerNew.childCount) {
                         val drawerName = ((drawerContainerNew.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
                         if (drawerName.isNotEmpty()) {
-                            drawers.add(DrawerRequest(drawerName))
+                            drawers.add(DrawerRequest(drawerName, i))
                         }
                     }
                     addShelf(name, room, drawers)
@@ -305,13 +309,13 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     for (i in 0 until drawerContainer.childCount) {
                         val drawerName = ((drawerContainer.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
                         if (drawerName.isNotEmpty()) {
-                            drawers.add(Drawer(shelf.drawers[i].id, drawerName, shelf.drawers[i].shelfId))
+                            drawers.add(Drawer(shelf.drawers[i].id, drawerName, 1, shelf.drawers[i].shelfId))
                         }
                     }
                     for (i in 0 until drawerContainerNew.childCount) {
                         val drawerName = ((drawerContainerNew.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
                         if (drawerName.isNotEmpty()) {
-                            drawers.add(Drawer(null, drawerName, null))
+                            drawers.add(Drawer(null, drawerName, 1, null))
                         }
                     }
                     shelf.id?.let { updateShelf(it, name, room, drawers, shelf) }
@@ -370,6 +374,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             val drawer = Drawer(
                 id = drawerJson.getInt("id"),
                 name = drawerJson.getString("name"),
+                order = drawerJson.getInt("order"),
                 shelfId = drawerJson.getInt("shelfId")
             )
             drawersList.add(drawer)
@@ -392,6 +397,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         for (drawer in drawers) {
             val drawerJson = JSONObject()
             drawerJson.put("name", drawer.name)
+            drawerJson.put("order", drawer.order)
             jsonArray.put(drawerJson)
         }
         val jsonObject = JSONObject()
@@ -463,6 +469,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 val drawerJson = JSONObject()
                 drawerJson.put("id", drawer.id)
                 drawerJson.put("name", drawer.name)
+                drawerJson.put("order", drawer.order)
                 drawerJson.put("shelfId", drawer.shelfId)
                 jsonArray.put(drawerJson)
             }
@@ -574,11 +581,16 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 val drawerJsonObject = drawersJsonArray.getJSONObject(j)
                 val drawerId = drawerJsonObject.optInt("id", -1).takeIf { it != -1 }
                 val drawerName = drawerJsonObject.getString("name")
+                val drawerOrder = drawerJsonObject.getInt("order")
                 val shelfId = drawerJsonObject.optInt("shelfId")
-                drawers.add(Drawer(drawerId, drawerName, shelfId))
+                drawers.add(Drawer(drawerId, drawerName, drawerOrder, shelfId))
             }
 
             shelves.add(Shelf(id, name, room, drawers, false))
+        }
+
+        for (shelf in shelves) {
+            shelf.drawers.sortBy { it.order }
         }
 
         return shelves

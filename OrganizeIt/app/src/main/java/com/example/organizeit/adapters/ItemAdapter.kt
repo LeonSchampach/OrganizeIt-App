@@ -237,10 +237,15 @@ class ItemAdapter(
         notifyDataSetChanged()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun addItem(newItem: Item) {
         itemList.add(newItem)
         fullItemList.add(newItem)
-        notifyItemInserted(itemList.lastIndex)
+        //notifyItemInserted(itemList.lastIndex)
+
+        itemList.sortBy { it.name }
+        fullItemList.sortBy { it.name }
+        notifyDataSetChanged()
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -250,6 +255,9 @@ class ItemAdapter(
         val fullIndex = fullItemList.indexOf(oldItem)
         fullItemList[fullIndex] = newItem
         notifyItemChanged(index)
+
+        selectedItems.remove(oldItem)
+        itemSelectionListener.onItemsSelected(selectedItems)
 
         itemList.sortBy { it.name }
         fullItemList.sortBy { it.name }

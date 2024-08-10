@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
@@ -102,7 +103,7 @@ class ShelfAdapter(
         //fullItemList[fullIndex] = newItem
         notifyItemChanged(index)
 
-        shelfList.sortBy { it.name }
+        //shelfList.sortBy { it.name }
         //fullItemList.sortBy { it.name }
         notifyDataSetChanged()
     }
@@ -217,7 +218,7 @@ class ShelfAdapter(
 
         fun bind(shelf: Shelf, context: Context, adapter: ShelfAdapter) {
             binding.shelfName.text = shelf.name
-            if (shelf.room == "") {
+            if (shelf.room != "") {
                 binding.shelfRoom.text = shelf.room
                 binding.shelfRoom.visibility = View.VISIBLE
             }
