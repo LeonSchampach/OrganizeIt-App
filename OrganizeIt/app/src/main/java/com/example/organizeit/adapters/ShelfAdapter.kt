@@ -217,7 +217,12 @@ class ShelfAdapter(
 
         fun bind(shelf: Shelf, context: Context, adapter: ShelfAdapter) {
             binding.shelfName.text = shelf.name
-            binding.shelfRoom.text = shelf.room
+            if (shelf.room == "") {
+                binding.shelfRoom.text = shelf.room
+                binding.shelfRoom.visibility = View.VISIBLE
+            }
+            else
+                binding.shelfRoom.visibility = View.GONE
             /*binding.root.setOnClickListener {
                 shelf.isExpanded = !shelf.isExpanded
                 notifyDataSetChanged()

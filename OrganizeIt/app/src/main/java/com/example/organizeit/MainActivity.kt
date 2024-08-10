@@ -254,7 +254,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             .setPositiveButton(getString(R.string.saveBtn)) { _, _ ->
                 val name = shelfNameInput.text.toString().trim()
                 val room = shelfRoomInput.text.toString().trim()
-                if (name.isNotEmpty() && room.isNotEmpty()) {
+                if (name.isNotEmpty()) {
                     val drawers = mutableListOf<DrawerRequest>()
                     for (i in 0 until drawerContainerNew.childCount) {
                         val drawerName = ((drawerContainerNew.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
@@ -264,7 +264,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     }
                     addShelf(name, room, drawers)
                 } else {
-                    Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Bitte geben Sie einen Namen ein", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton(getString(R.string.cancelBtn), null)
@@ -300,7 +300,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             .setPositiveButton(getString(R.string.saveBtn)) { dialog, _ ->
                 val name = shelfNameInput.text.toString().trim()
                 val room = shelfRoomInput.text.toString().trim()
-                if (name.isNotEmpty() && room.isNotEmpty()) {
+                if (name.isNotEmpty()) {
                     val drawers = mutableListOf<Drawer>()
                     for (i in 0 until drawerContainer.childCount) {
                         val drawerName = ((drawerContainer.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
@@ -316,7 +316,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     }
                     shelf.id?.let { updateShelf(it, name, room, drawers, shelf) }
                 } else {
-                    Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Der Name darf nicht leer sein", Toast.LENGTH_SHORT).show()
                 }
                 dialog.dismiss()
                 hideCheckboxes()
@@ -525,7 +525,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     }
 
     private fun fetchShelves() {
-        Log.i("HALLO", "fetchShelves() called!")
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getAllShelf"
         val client = OkHttpClient()
         val request = Request.Builder()
