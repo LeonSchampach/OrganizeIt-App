@@ -128,6 +128,7 @@ class ItemAdapter(
     fun setAllCheckboxesVisible(visible: Boolean) {
         for (item in itemList) {
             item.checkboxVisible = visible
+            selectedItems.remove(item)
         }
         notifyDataSetChanged() // Notify the adapter to refresh the views
     }

@@ -1,36 +1,28 @@
 package com.example.organizeit
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.organizeit.adapters.DrawerAdapter
 import com.example.organizeit.adapters.ShelfAdapter
 import com.example.organizeit.interfaces.MenuVisibilityListener
 import com.example.organizeit.interfaces.ShelfSelectionListener
 import com.example.organizeit.models.Drawer
-import com.example.organizeit.models.DrawerRequest
-import com.example.organizeit.models.Item
 import com.example.organizeit.models.Shelf
-import com.example.organizeit.models.ShelfList
 import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.Call
@@ -43,9 +35,6 @@ import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelectionListener {
 
@@ -245,33 +234,53 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
         val shelfNameInput = view.findViewById<EditText>(R.id.shelfNameInput)
         val shelfRoomInput = view.findViewById<EditText>(R.id.shelfRoomInput)
-        val drawerContainerNew = view.findViewById<LinearLayout>(R.id.drawerContainerNew)
+        val drawerContainerNew = view.findViewById<RecyclerView>(R.id.drawerContainerNew)
         val addDrawerButton = view.findViewById<Button>(R.id.addDrawerButton)
 
+        val drawers = mutableListOf<Drawer>()
+        val adapter = DrawerAdapter(drawers)
+        drawerContainerNew.layoutManager = LinearLayoutManager(this)
+        drawerContainerNew.adapter = adapter
+
+        val callback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                adapter.onItemMove(viewHolder.adapterPosition, target.adapterPosition)
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                // Not needed since we don't want swipe functionality
+            }
+        }
+
+        val itemTouchHelper = ItemTouchHelper(callback)
+        itemTouchHelper.attachToRecyclerView(drawerContainerNew)
+
         addDrawerButton.setOnClickListener {
-            addDrawerInput(drawerContainerNew)
+            adapter.addDrawer(Drawer(null, "", 1, null))
         }
 
         val dialog = AlertDialog.Builder(this)
             .setTitle(getString(R.string.add_shelf))
             .setView(view)
-            .setPositiveButton(getString(R.string.saveBtn)) { _, _ ->
+            .setPositiveButton(getString(R.string.saveBtn)) { dialog, _ ->
                 val name = shelfNameInput.text.toString().trim()
                 val room = shelfRoomInput.text.toString().trim()
                 if (name.isNotEmpty()) {
-                    val drawers = mutableListOf<DrawerRequest>()
-                    for (i in 0 until drawerContainerNew.childCount) {
-                        val drawerName = ((drawerContainerNew.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
-                        if (drawerName.isNotEmpty()) {
-                            drawers.add(DrawerRequest(drawerName, i))
-                        }
+                    val updatedDrawers = adapter.getDrawers().mapIndexed { index, drawer ->
+                        drawer.copy(order = index)  // Update the order of each drawer based on its position
                     }
                     addShelf(name, room, drawers)
                 } else {
-                    Toast.makeText(this, "Bitte geben Sie einen Namen ein", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Bitte geben Sie einen Namen ein1", Toast.LENGTH_SHORT).show()
                 }
+                dialog.dismiss()
+                hideCheckboxes()
             }
-            .setNegativeButton(getString(R.string.cancelBtn), null)
+            .setNegativeButton(getString(R.string.cancelBtn)) { dialog, _ ->
+                dialog.dismiss()
+                shelfAdapter.uncheckAllCheckboxes()
+            }
             .create()
 
         dialog.show()
@@ -284,18 +293,37 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         val shelfNameInput = view.findViewById<EditText>(R.id.shelfNameInput)
         val shelfRoomInput = view.findViewById<EditText>(R.id.shelfRoomInput)
         val drawerContainer = view.findViewById<LinearLayout>(R.id.drawerContainer)
-        val drawerContainerNew = view.findViewById<LinearLayout>(R.id.drawerContainerNew)
+        val drawerContainerNew = view.findViewById<RecyclerView>(R.id.drawerContainerNew)
         val addDrawerButton = view.findViewById<Button>(R.id.addDrawerButton)
+
+        val drawers = shelf.drawers.toMutableList()
+        val adapter = DrawerAdapter(drawers)
+        drawerContainerNew.layoutManager = LinearLayoutManager(this)
+        drawerContainerNew.adapter = adapter
+
+        val callback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                adapter.onItemMove(viewHolder.adapterPosition, target.adapterPosition)
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                // Not needed since we don't want swipe functionality
+            }
+        }
+
+        val itemTouchHelper = ItemTouchHelper(callback)
+        itemTouchHelper.attachToRecyclerView(drawerContainerNew)
 
         shelfNameInput.setText(shelf.name)
         shelfRoomInput.setText(shelf.room)
 
-        for (drawer: Drawer in shelf.drawers) {
-            editDrawerInput(drawerContainer, drawer)
-        }
+        /*for (drawer: Drawer in shelf.drawers) {
+            adapter.addDrawer(Drawer(null, "", 1, null))
+        }*/
 
         addDrawerButton.setOnClickListener {
-            addDrawerInput(drawerContainerNew)
+            adapter.addDrawer(Drawer(null, "", 1, null))
         }
 
         val dialog = AlertDialog.Builder(this)
@@ -305,20 +333,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 val name = shelfNameInput.text.toString().trim()
                 val room = shelfRoomInput.text.toString().trim()
                 if (name.isNotEmpty()) {
-                    val drawers = mutableListOf<Drawer>()
-                    for (i in 0 until drawerContainer.childCount) {
-                        val drawerName = ((drawerContainer.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
-                        if (drawerName.isNotEmpty()) {
-                            drawers.add(Drawer(shelf.drawers[i].id, drawerName, 1, shelf.drawers[i].shelfId))
-                        }
+                    val updatedDrawers = adapter.getDrawers().mapIndexed { index, drawer ->
+                        drawer.copy(order = index)  // Update the order of each drawer based on its position
                     }
-                    for (i in 0 until drawerContainerNew.childCount) {
-                        val drawerName = ((drawerContainerNew.getChildAt(i) as LinearLayout).getChildAt(0) as EditText).text.toString().trim()
-                        if (drawerName.isNotEmpty()) {
-                            drawers.add(Drawer(null, drawerName, 1, null))
-                        }
-                    }
-                    shelf.id?.let { updateShelf(it, name, room, drawers, shelf) }
+                    shelf.id?.let { updateShelf(it, name, room, updatedDrawers, shelf) }
                 } else {
                     Toast.makeText(this, "Der Name darf nicht leer sein", Toast.LENGTH_SHORT).show()
                 }
@@ -334,22 +352,12 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         dialog.show()
     }
 
-    private fun addDrawerInput(container: LinearLayout) {
-        val inflater = LayoutInflater.from(this)
-        val drawerInputLayout = inflater.inflate(R.layout.item_drawer_input, container, false)
-        val drawerName = drawerInputLayout.findViewById<EditText>(R.id.drawerName)
-        drawerName.hint = getString(R.string.drawer_name)
-
-        val deleteButton = drawerInputLayout.findViewById<ImageButton>(R.id.buttonDeleteDrawerInput)
-        deleteButton.setOnClickListener {
-            container.removeView(drawerInputLayout)
-        }
-
-        container.addView(drawerInputLayout)
+    /*private fun addDrawerInput(adapter: DrawerAdapter) {
+        adapter.addDrawer("")
     }
 
-    private fun editDrawerInput(container: LinearLayout, drawer: Drawer) {
-        val inflater = LayoutInflater.from(this)
+    private fun editDrawerInput(adapter: DrawerAdapter, drawer: Drawer) {
+        /*val inflater = LayoutInflater.from(this)
         val drawerInputLayout = inflater.inflate(R.layout.item_drawer_input, container, false)
         val drawerName = drawerInputLayout.findViewById<EditText>(R.id.drawerName)
         drawerName.setText(drawer.name)
@@ -360,8 +368,9 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             container.removeView(drawerInputLayout)
         }
 
-        container.addView(drawerInputLayout)
-    }
+        container.addView(drawerInputLayout)*/
+        adapter.addDrawer(drawer.name)
+    }*/
 
     private fun parseShelf(jsonString: String): Shelf {
         val jsonObject = JSONObject(jsonString)
@@ -390,7 +399,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         return shelf
     }
 
-    private fun addShelf(name: String, room: String, drawers: List<DrawerRequest>) {
+    private fun addShelf(name: String, room: String, drawers: MutableList<Drawer>) {
         val shelfListId = 1
 
         val jsonArray = JSONArray()
@@ -455,7 +464,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         })
     }
 
-    private fun updateShelf(id: Int, name: String, room: String, drawers: MutableList<Drawer>, oldShelf: Shelf) {
+    private fun updateShelf(id: Int, name: String, room: String, drawers: List<Drawer>, oldShelf: Shelf) {
         val shelfListId = 1
 
         val jsonArray = JSONArray()

@@ -1,30 +1,15 @@
 package com.example.organizeit.adapters
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
-import com.example.organizeit.DrawerDetailActivity
-import com.example.organizeit.MainActivity
 import com.example.organizeit.R
 import com.example.organizeit.databinding.ItemShelfBinding
 import com.example.organizeit.interfaces.OnDrawerClickListener
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
-import com.example.organizeit.util.ConfigUtil
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import java.io.IOException
 
 class MoveItemAdapter(
     private val shelfList: MutableList<Shelf>,
@@ -160,7 +145,7 @@ class MoveItemAdapter(
     }
 
     inner class DrawerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val drawerName: TextView = itemView.findViewById(R.id.drawerName)
+        private val drawerName: TextView = itemView.findViewById(R.id.drawerNameInput)
 
         fun bind(drawer: Drawer) {
             drawerName.text = drawer.name

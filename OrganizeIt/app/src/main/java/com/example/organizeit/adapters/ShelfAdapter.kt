@@ -8,8 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
-import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
@@ -20,7 +18,6 @@ import com.example.organizeit.databinding.ItemShelfBinding
 import com.example.organizeit.interfaces.MenuVisibilityListener
 import com.example.organizeit.interfaces.ShelfSelectionListener
 import com.example.organizeit.models.Drawer
-import com.example.organizeit.models.Item
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.util.ConfigUtil
 import okhttp3.Call
@@ -284,6 +281,7 @@ class ShelfAdapter(
     fun setAllCheckboxesVisible(visible: Boolean) {
         for (shelf in shelfList) {
             shelf.checkboxVisible = visible
+            selectedShelves.remove(shelf)
         }
         notifyDataSetChanged() // Notify the adapter to refresh the views
     }
@@ -297,7 +295,7 @@ class ShelfAdapter(
     }
 
     inner class DrawerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val drawerName: TextView = itemView.findViewById(R.id.drawerName)
+        private val drawerName: TextView = itemView.findViewById(R.id.drawerNameInput)
 
         fun bind(drawer: Drawer, context: Context, adapter: ShelfAdapter) {
             drawerName.text = drawer.name

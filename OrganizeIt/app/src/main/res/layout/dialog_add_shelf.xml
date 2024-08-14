@@ -26,12 +26,14 @@
         android:orientation="vertical"
         android:layout_marginTop="16dp" />
 
-    <LinearLayout
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/drawerContainerNew"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginTop="16dp" />
+        android:padding="0dp"
+        android:layout_margin="0dp"
+        android:layout_marginTop="8dp" />
 
     <Button
         android:id="@+id/addDrawerButton"
