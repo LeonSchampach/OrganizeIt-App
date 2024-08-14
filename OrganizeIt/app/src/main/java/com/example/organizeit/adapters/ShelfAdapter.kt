@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
@@ -212,6 +213,7 @@ class ShelfAdapter(
 
     inner class ShelfViewHolder(private val binding: ItemShelfBinding) : RecyclerView.ViewHolder(binding.root) {
         private val checkBox: CheckBox = itemView.findViewById(R.id.shelfCheckBox)
+        private val imageView = itemView.findViewById<ImageView>(R.id.imageView)
 
         fun bind(shelf: Shelf, context: Context, adapter: ShelfAdapter) {
             binding.shelfName.text = shelf.name
@@ -236,6 +238,12 @@ class ShelfAdapter(
                 checkBox.visibility = View.GONE
                 itemView.setOnClickListener {
                     shelf.isExpanded = !shelf.isExpanded
+
+                    if (shelf.isExpanded)
+                        imageView.rotation = 90f    // Rotate by 90 degrees
+                    else
+                        imageView.rotation = 0f     // Rotate back to the original position
+
                     notifyDataSetChanged()
                 }
             }
@@ -259,6 +267,7 @@ class ShelfAdapter(
 
             itemView.setOnLongClickListener {
                 setAllCheckboxesVisible(true)
+                setIsExpandedFalse()
                 menuVisibilityListener.showMenuItems()
 
                 //checkBox.setOnCheckedChangeListener(null)  // Disable listener
@@ -284,6 +293,15 @@ class ShelfAdapter(
             selectedShelves.remove(shelf)
         }
         notifyDataSetChanged() // Notify the adapter to refresh the views
+    }
+
+    private fun setIsExpandedFalse() {
+        for (shelf in shelfList) {
+            shelf.isExpanded = false
+        }
+        for (shelf in selectedShelves) {
+            shelf.isExpanded = false
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -342,38 +360,4 @@ class ShelfAdapter(
             }
         })
     }
-
-    private fun deleteDrawer(drawer: Drawer, context: Context, adapter: ShelfAdapter) {
-        val client = OkHttpClient()
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/drawer/deleteDrawer?id=${drawer.id}"
-
-        val request = Request.Builder()
-            .url(apiUrl)
-            .delete() // Empty DELETE body
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                (context as? MainActivity)?.runOnUiThread {
-                    Toast.makeText(context, "Error deleting drawer", Toast.LENGTH_SHORT).show()
-                    Log.e("ShelfAdapter", "Error deleting drawer", e)
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (!response.isSuccessful) {
-                    (context as? MainActivity)?.runOnUiThread {
-                        Toast.makeText(context, "Error deleting drawer", Toast.LENGTH_SHORT).show()
-                        Log.e("ShelfAdapter", "Error deleting drawer: ${response.code}")
-                    }
-                } else {
-                    (context as? MainActivity)?.runOnUiThread {
-                        Toast.makeText(context, "Drawer deleted successfully", Toast.LENGTH_SHORT).show()
-                        adapter.removeDrawer(drawer)
-                    }
-                }
-            }
-        })
-    }
-
 }

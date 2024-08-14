@@ -13,7 +13,7 @@
         android:layout_weight="0"
         android:layout_gravity="center_vertical"
         android:padding="0dp"
-        android:backgroundTint="@color/colorPrimaryDark"
+        android:backgroundTint="@color/transparent"
         app:srcCompat="@drawable/baseline_drag_indicator_24" />
 
     <EditText

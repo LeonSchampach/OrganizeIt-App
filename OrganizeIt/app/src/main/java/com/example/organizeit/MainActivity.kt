@@ -8,7 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -238,7 +237,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         val addDrawerButton = view.findViewById<Button>(R.id.addDrawerButton)
 
         val drawers = mutableListOf<Drawer>()
-        val adapter = DrawerAdapter(drawers)
+        val adapter = DrawerAdapter(drawers, this)
         drawerContainerNew.layoutManager = LinearLayoutManager(this)
         drawerContainerNew.adapter = adapter
 
@@ -270,9 +269,9 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     val updatedDrawers = adapter.getDrawers().mapIndexed { index, drawer ->
                         drawer.copy(order = index)  // Update the order of each drawer based on its position
                     }
-                    addShelf(name, room, drawers)
+                    addShelf(name, room, updatedDrawers)
                 } else {
-                    Toast.makeText(this, "Bitte geben Sie einen Namen ein1", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Bitte geben Sie einen Namen ein", Toast.LENGTH_SHORT).show()
                 }
                 dialog.dismiss()
                 hideCheckboxes()
@@ -292,12 +291,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
         val shelfNameInput = view.findViewById<EditText>(R.id.shelfNameInput)
         val shelfRoomInput = view.findViewById<EditText>(R.id.shelfRoomInput)
-        val drawerContainer = view.findViewById<LinearLayout>(R.id.drawerContainer)
         val drawerContainerNew = view.findViewById<RecyclerView>(R.id.drawerContainerNew)
         val addDrawerButton = view.findViewById<Button>(R.id.addDrawerButton)
 
         val drawers = shelf.drawers.toMutableList()
-        val adapter = DrawerAdapter(drawers)
+        val adapter = DrawerAdapter(drawers, this)
         drawerContainerNew.layoutManager = LinearLayoutManager(this)
         drawerContainerNew.adapter = adapter
 
@@ -399,7 +397,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         return shelf
     }
 
-    private fun addShelf(name: String, room: String, drawers: MutableList<Drawer>) {
+    private fun addShelf(name: String, room: String, drawers: List<Drawer>) {
         val shelfListId = 1
 
         val jsonArray = JSONArray()

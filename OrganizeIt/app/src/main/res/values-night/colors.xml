@@ -16,4 +16,5 @@
     <color name="navBarColor">#FFFFFF</color>
     <color name="backgroundColor">#232323</color>
     <color name="iconColor">#FFFFFF</color>
+    <color name="transparent">#00FFFFFF</color>
 </resources>
