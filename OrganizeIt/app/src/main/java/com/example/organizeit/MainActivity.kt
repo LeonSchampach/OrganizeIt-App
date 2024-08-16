@@ -13,6 +13,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -24,6 +26,7 @@ import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.navigation.NavigationView
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -44,6 +47,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private lateinit var toolbar: Toolbar
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
+    private lateinit var drawerLayout: DrawerLayout
     private val shelfList = mutableListOf<Shelf>()
     private var selectedShelves: List<Shelf> = emptyList()
     private var userId = -1
@@ -55,6 +59,23 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
+
+        drawerLayout = findViewById(R.id.drawer_layout)
+        val navView: NavigationView = findViewById(R.id.navigation_view)
+
+        navView.setNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.nav_item1 -> {
+                    // Handle navigation to Item 1
+                }
+                R.id.nav_item2 -> {
+                    // Handle navigation to Item 2
+                }
+                // Add more cases as needed
+            }
+            drawerLayout.closeDrawer(GravityCompat.END)
+            true
+        }
 
         title = getString(R.string.headline_shelves)
 
@@ -111,6 +132,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_items, menu)
+        menuInflater.inflate(R.menu.toolbar_menu, menu)
         return true
     }
 
@@ -121,7 +143,23 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 showOptionsMenu()
                 true
             }
+            R.id.action_drawer -> {
+                if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
+                    drawerLayout.closeDrawer(GravityCompat.END)
+                } else {
+                    drawerLayout.openDrawer(GravityCompat.END)
+                }
+                true
+            }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
+            drawerLayout.closeDrawer(GravityCompat.END)
+        } else {
+            super.onBackPressed()
         }
     }
 
