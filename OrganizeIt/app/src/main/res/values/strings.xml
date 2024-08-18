@@ -39,4 +39,5 @@
     <string name="move">Verschieben</string>
     <string name="delete">Löschen</string>
     <string name="drawer">Lade</string>
+    <string name="add_list">Liste hinzufügen</string>
 </resources>

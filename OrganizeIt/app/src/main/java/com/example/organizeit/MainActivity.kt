@@ -24,6 +24,7 @@ import com.example.organizeit.interfaces.MenuVisibilityListener
 import com.example.organizeit.interfaces.ShelfSelectionListener
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
+import com.example.organizeit.models.ShelfList
 import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
     private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navView: NavigationView
     private val shelfList = mutableListOf<Shelf>()
     private var selectedShelves: List<Shelf> = emptyList()
     private var userId = -1
@@ -61,7 +63,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         setSupportActionBar(toolbar)
 
         drawerLayout = findViewById(R.id.drawer_layout)
-        val navView: NavigationView = findViewById(R.id.navigation_view)
+        navView = findViewById(R.id.navigation_view)
 
         navView.setNavigationItemSelectedListener {
             when (it.itemId) {
@@ -90,8 +92,8 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         if (userId == -1) {
             register()
         }
-
-        //fetchShelves()
+        else
+            fetchShelfLists()
 
         // Floating action button click listener for adding a new shelf
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
@@ -249,6 +251,8 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                                 editor.putInt("id", id)
                             }
                             editor.apply()
+
+                            fetchShelfLists()
                         }
                     }
                 } else {
@@ -608,6 +612,70 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 }
             }
         })
+    }
+
+    private fun fetchShelfLists() {
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelfList/getAllShelfListsByUserId?userId="+userId
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(apiUrl)
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error fetching shelfLists", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Error fetching shelfLists", e)
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (!response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Error fetching shelfLists", Toast.LENGTH_SHORT).show()
+                        Log.e(TAG, "Error fetching shelfLists: ${response.code}")
+                    }
+                } else {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val shelfLists = parseShelfLists(responseBody)
+                        runOnUiThread {
+                            populateMenu(shelfLists)
+                        }
+
+                        /*runOnUiThread {
+                            shelfAdapter.setShelves(shelfList)
+                        }*/
+                    }
+                }
+            }
+        })
+    }
+
+    private fun populateMenu(shelfLists: List<ShelfList>) {
+        val menu = navView.menu
+        //menu.clear()  // Clear any existing items in the menu
+
+        for (shelfList in shelfLists) {
+            menu.add(Menu.NONE, shelfList.id, Menu.NONE, shelfList.name)
+        }
+    }
+
+    private fun parseShelfLists(jsonString: String): List<ShelfList> {
+        val jsonArray = JSONArray(jsonString)
+        val shelfLists = mutableListOf<ShelfList>()
+
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            val id = jsonObject.getInt("id")
+            val name = jsonObject.getString("name")
+
+            shelfLists.add(ShelfList(id, name))
+        }
+
+        shelfLists.sortBy { it.name }
+
+        return shelfLists
     }
 
     private fun parseShelves(jsonString: String): List<Shelf> {
