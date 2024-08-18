@@ -6,7 +6,8 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:backgroundTint="@color/backgroundColor">
 
     <!-- Main content of the activity -->
     <RelativeLayout
@@ -58,6 +59,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="end"
         app:menu="@menu/drawer_menu"
-        android:background="@color/white"/>
+        android:background="@color/white"
+        android:backgroundTint="@color/backgroundColor"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>
