@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private val shelfList = mutableListOf<Shelf>()
     private var selectedShelves: List<Shelf> = emptyList()
     private var userId = -1
+    private var shelfListId = -1
     private var isComingFromBackground = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,6 +77,16 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 R.id.nav_item2 -> {
                     // Handle navigation to Item 2
                 }
+                else -> {
+                    shelfListId = it.itemId
+
+                    val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
+                    val editor = sharedPreferences.edit()
+                    editor.putInt("shelfListId", shelfListId)
+                    editor.apply()
+
+                    fetchShelves()
+                }
                 // Add more cases as needed
             }
             drawerLayout.closeDrawer(GravityCompat.END)
@@ -91,6 +102,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
         val sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE)
         userId = sharedPreferences.getInt("id", -1)
+        shelfListId = sharedPreferences.getInt("shelfListId", -1)
 
         if (userId == -1) {
             register()
@@ -628,8 +640,42 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         })
     }
 
+    /*private fun fetchShelves() {
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getAllShelves"
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(apiUrl)
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error fetching shelves", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Error fetching shelves", e)
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (!response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Error fetching shelves", Toast.LENGTH_SHORT).show()
+                        Log.e(TAG, "Error fetching shelves: ${response.code}")
+                    }
+                } else {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val shelfList = parseShelves(responseBody)
+                        runOnUiThread {
+                            shelfAdapter.setShelves(shelfList)
+                        }
+                    }
+                }
+            }
+        })
+    }*/
+
     private fun fetchShelves() {
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getAllShelf"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getShelvesByShelfListId?shelfListId="+shelfListId
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
