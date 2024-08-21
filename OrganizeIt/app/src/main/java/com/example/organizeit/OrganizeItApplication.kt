@@ -8,7 +8,7 @@ class OrganizeItApplication : Application() {
 
     private var activityReferences = 0
     private var isActivityChangingConfigurations = false
-    var isAppInBackground = true
+    var isAppInBackground = false
 
     override fun onCreate() {
         super.onCreate()

@@ -56,7 +56,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private var selectedShelves: List<Shelf> = emptyList()
     private var userId = -1
     private var shelfListId = -1
-    private var isComingFromBackground = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,6 +114,8 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             showAddShelfDialog()
         }
+
+        fetchShelves()
     }
 
     override fun onResume() {
