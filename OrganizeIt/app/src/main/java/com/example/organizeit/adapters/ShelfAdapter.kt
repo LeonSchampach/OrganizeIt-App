@@ -215,6 +215,7 @@ class ShelfAdapter(
         private val checkBox: CheckBox = itemView.findViewById(R.id.shelfCheckBox)
         private val imageView = itemView.findViewById<ImageView>(R.id.imageView)
 
+        @SuppressLint("NotifyDataSetChanged")
         fun bind(shelf: Shelf, context: Context, adapter: ShelfAdapter) {
             binding.shelfName.text = shelf.name
             if (shelf.room != "") {
@@ -283,6 +284,8 @@ class ShelfAdapter(
 
                 true
             }
+
+            imageView.rotation = if (shelf.isExpanded) 90f else 0f
         }
     }
 

@@ -36,7 +36,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_above="@id/fab"
-        android:layout_below="@id/appBarLayout"/>
+        android:layout_below="@id/appBarLayout"
+        android:backgroundTint="@color/backgroundColor"/>
 
     <!-- FloatingActionButton at the bottom-right corner -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -64,8 +65,9 @@
 
         <LinearLayout
             android:id="@+id/menu_container"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:orientation="vertical" />
 
     </com.google.android.material.navigation.NavigationView>

@@ -72,10 +72,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             when (it.itemId) {
                 R.id.nav_item1 -> {
                     // Handle navigation to Item 1
-
+                    showAddItemDialog()
                 }
                 R.id.nav_item2 -> {
                     // Handle navigation to Item 2
+                    drawerLayout.closeDrawer(GravityCompat.END)
                 }
                 else -> {
                     shelfListId = it.itemId
@@ -86,10 +87,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     editor.apply()
 
                     fetchShelves()
+                    drawerLayout.closeDrawer(GravityCompat.END)
                 }
                 // Add more cases as needed
             }
-            drawerLayout.closeDrawer(GravityCompat.END)
             true
         }
 
@@ -228,49 +229,131 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         }
     }
 
-    private fun addEditableItem() {
-        val menuContainer = navView.getHeaderView(0).findViewById<LinearLayout>(R.id.menu_container)
+    private fun showAddItemDialog() {
+        // Inflate the dialog layout
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_shelf_list, null)
+        val editText = dialogView.findViewById<EditText>(R.id.editTextShelfListName)
 
-        // Create the container for the new item
-        val newItemLayout = LinearLayout(this)
-        newItemLayout.orientation = LinearLayout.HORIZONTAL
-
-        // Create the EditText for the user to enter the item name
-        val editText = EditText(this)
-        editText.hint = "Enter item name"
-        newItemLayout.addView(editText)
-
-        // Create the Button to finalize the item
-        val button = Button(this)
-        button.text = "Add"
-        newItemLayout.addView(button)
-
-        // Add the layout to the container
-        menuContainer.addView(newItemLayout)
-
-        // Handle button click
-        button.setOnClickListener {
-            val itemName = editText.text.toString().trim()
-            if (itemName.isNotEmpty()) {
-                finalizeItem(newItemLayout, itemName)
-                callRestEndpoint(itemName)
+        // Create and show the dialog
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.add_shelf_list))
+            .setView(dialogView)
+            .setPositiveButton(getString(R.string.saveBtn)) { _, _ ->
+                val listName = editText.text.toString().trim()
+                if (listName.isNotEmpty()) {
+                    addShelfList(listName)
+                }
             }
-        }
+            .setNegativeButton(getString(R.string.cancelBtn), null)
+            .create()
+
+        dialog.show()
     }
 
-    private fun finalizeItem(itemLayout: LinearLayout, itemName: String) {
-        // Remove the EditText and Button
-        itemLayout.removeAllViews()
-
-        // Create a TextView to display the item name
-        val textView = TextView(this)
-        textView.text = itemName
-        itemLayout.addView(textView)
+    private fun addItemToMenu(shelfListId: Int, shelfListName: String) {
+        val menu = navView.menu
+        menu.add(Menu.NONE, shelfListId, Menu.NONE, shelfListName)
     }
 
-    private fun callRestEndpoint(itemName: String) {
-        // Call your REST endpoint here with the item name
-        // The exact implementation is not required as per the question
+    private fun addShelfList(listName: String) {
+        val client = OkHttpClient()
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelfList/createShelfList?name="+listName
+        val requestBody = "".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url(apiUrl)
+            .post(requestBody)
+            .build()
+
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Error adding shelfList", e)
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "ShelfList added successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.d(TAG, "ShelfList added successfully")
+                    }
+
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val newShelfList = parseShelfList(responseBody)
+                        runOnUiThread {
+                            addItemToMenu(newShelfList.id, newShelfList.name)
+                            addUserShelfList(userId, newShelfList.id)
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Failed to add shelfList",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e(TAG, "Failed to add shelfList: ${response.body?.string()}")
+                    }
+                }
+            }
+        })
+    }
+
+    private fun addUserShelfList(userId: Int, shelfListId: Int) {
+        val client = OkHttpClient()
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/userShelfList/createUserShelfList?userId="+userId+"&shelfListId="+shelfListId
+        val requestBody = "".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url(apiUrl)
+            .post(requestBody)
+            .build()
+
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Error adding userShelfList", e)
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "UserShelfList added successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.d(TAG, "UserShelfList added successfully")
+                    }
+
+                    /*val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val newUserShelfList = parseUserShelfList(responseBody)
+                        runOnUiThread {
+                            addItemToMenu(newShelfList.id, newShelfList.name)
+                        }
+                    }*/
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Failed to add userShelfList",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e(TAG, "Failed to add userShelfList: ${response.body?.string()}")
+                    }
+                }
+            }
+        })
     }
 
     private fun register() {
@@ -305,6 +388,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                         val jsonObject = JSONObject(responseBody)
                         val id = jsonObject.getInt("id")
                         runOnUiThread {
+                            userId = id
                             val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
                             val editor = sharedPreferences.edit()
                             if (id != null) {
@@ -500,8 +584,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     }
 
     private fun addShelf(name: String, room: String, drawers: List<Drawer>) {
-        val shelfListId = 1
-
         val jsonArray = JSONArray()
         for (drawer in drawers) {
             val drawerJson = JSONObject()
@@ -753,6 +835,15 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         for (shelfList in shelfLists) {
             menu.add(Menu.NONE, shelfList.id, Menu.NONE, shelfList.name)
         }
+    }
+
+    private fun parseShelfList(jsonString: String): ShelfList {
+        val jsonObject = JSONObject(jsonString)
+
+        val id = jsonObject.getInt("id")
+        val name = jsonObject.getString("name")
+
+        return ShelfList(id, name)
     }
 
     private fun parseShelfLists(jsonString: String): List<ShelfList> {
