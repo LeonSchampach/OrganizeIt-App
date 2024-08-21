@@ -8,6 +8,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -69,6 +71,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             when (it.itemId) {
                 R.id.nav_item1 -> {
                     // Handle navigation to Item 1
+
                 }
                 R.id.nav_item2 -> {
                     // Handle navigation to Item 2
@@ -211,6 +214,51 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 }
             }
         }
+    }
+
+    private fun addEditableItem() {
+        val menuContainer = navView.getHeaderView(0).findViewById<LinearLayout>(R.id.menu_container)
+
+        // Create the container for the new item
+        val newItemLayout = LinearLayout(this)
+        newItemLayout.orientation = LinearLayout.HORIZONTAL
+
+        // Create the EditText for the user to enter the item name
+        val editText = EditText(this)
+        editText.hint = "Enter item name"
+        newItemLayout.addView(editText)
+
+        // Create the Button to finalize the item
+        val button = Button(this)
+        button.text = "Add"
+        newItemLayout.addView(button)
+
+        // Add the layout to the container
+        menuContainer.addView(newItemLayout)
+
+        // Handle button click
+        button.setOnClickListener {
+            val itemName = editText.text.toString().trim()
+            if (itemName.isNotEmpty()) {
+                finalizeItem(newItemLayout, itemName)
+                callRestEndpoint(itemName)
+            }
+        }
+    }
+
+    private fun finalizeItem(itemLayout: LinearLayout, itemName: String) {
+        // Remove the EditText and Button
+        itemLayout.removeAllViews()
+
+        // Create a TextView to display the item name
+        val textView = TextView(this)
+        textView.text = itemName
+        itemLayout.addView(textView)
+    }
+
+    private fun callRestEndpoint(itemName: String) {
+        // Call your REST endpoint here with the item name
+        // The exact implementation is not required as per the question
     }
 
     private fun register() {
