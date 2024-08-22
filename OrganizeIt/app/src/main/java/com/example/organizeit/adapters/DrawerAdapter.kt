@@ -30,11 +30,12 @@ class DrawerAdapter(private val drawers: MutableList<Drawer>, private val contex
         val drawerNameInput: EditText = view.findViewById(R.id.drawerNameInput)
         val deleteButton: ImageButton = view.findViewById(R.id.buttonDeleteDrawerInput)
 
-        fun bind(drawer: Drawer, context: Context, drawerAdapter: DrawerAdapter) {
+        /*fun bind(drawer: Drawer, context: Context, drawerAdapter: DrawerAdapter) {
             deleteButton.setOnClickListener{
-                deleteDrawer(drawer, context)
+                if (drawer.id != null)
+                    deleteDrawer(drawer, context)
             }
-        }
+        }*/
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DrawerViewHolder {
@@ -46,10 +47,13 @@ class DrawerAdapter(private val drawers: MutableList<Drawer>, private val contex
     override fun onBindViewHolder(holder: DrawerViewHolder, position: Int) {
         val drawer = drawers[position]
         holder.drawerNameInput.setText(drawer.name)
-        holder.bind(drawer, context, this)
+        //holder.bind(drawer, context, this)
 
         holder.deleteButton.setOnClickListener {
-            removeDrawerAt(position)
+            if (drawer.id != null)
+                removeDrawerAt(position)
+            else
+                removeDrawer(position)
         }
 
         holder.drawerNameInput.addTextChangedListener(object : TextWatcher {
@@ -69,17 +73,17 @@ class DrawerAdapter(private val drawers: MutableList<Drawer>, private val contex
         notifyItemInserted(drawers.size - 1)
     }
 
-    fun removeDrawerAt(position: Int) {
-        deleteDrawer(drawers.get(position), context)
-        drawers.removeAt(position)
-        notifyItemRemoved(position)
+    private fun removeDrawerAt(position: Int) {
+        deleteDrawer(drawers[position], context)
+        //drawers.removeAt(position)
+        //notifyItemRemoved(position)
+        removeDrawer(position)
     }
 
-    fun removeDrawer(drawer: Drawer) {
-        val drawerIndex = drawers.indexOf(drawer)
-        drawers.remove(drawer)
-        notifyItemChanged(drawerIndex)
-        notifyItemRemoved(drawerIndex)
+    private fun removeDrawer(position: Int) {
+        drawers.removeAt(position)
+        //notifyItemChanged(position)
+        notifyItemRemoved(position)
     }
 
     fun onItemMove(fromPosition: Int, toPosition: Int) {

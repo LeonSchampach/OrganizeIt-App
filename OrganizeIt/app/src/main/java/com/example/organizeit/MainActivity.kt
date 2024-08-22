@@ -73,10 +73,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     // Handle navigation to Item 1
                     showAddItemDialog()
                 }
-                R.id.nav_item2 -> {
+                /*R.id.nav_item2 -> {
                     // Handle navigation to Item 2
                     drawerLayout.closeDrawer(GravityCompat.END)
-                }
+                }*/
                 else -> {
                     shelfListId = it.itemId
 

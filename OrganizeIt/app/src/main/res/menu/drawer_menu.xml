@@ -4,9 +4,9 @@
         android:id="@+id/nav_item1"
         android:title="@string/add_list"
         android:icon="@drawable/ic_add" />
-    <item
+    <!--<item
         android:id="@+id/nav_item2"
         android:title="Item 2"
-        android:icon="@drawable/ic_item2" />
+        android:icon="@drawable/ic_item2" />-->
     <!-- Add more items here -->
 </menu>
