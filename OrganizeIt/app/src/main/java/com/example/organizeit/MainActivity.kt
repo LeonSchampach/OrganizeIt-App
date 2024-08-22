@@ -56,6 +56,8 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private var selectedShelves: List<Shelf> = emptyList()
     private var userId = -1
     private var shelfListId = -1
+    private var shelfListName: String? = null
+    private var isDrawerVisible = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,10 +81,14 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 }*/
                 else -> {
                     shelfListId = it.itemId
+                    shelfListName = it.title.toString()
+
+                    title = shelfListName
 
                     val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
                     val editor = sharedPreferences.edit()
                     editor.putInt("shelfListId", shelfListId)
+                    editor.putString("shelfListName", shelfListName)
                     editor.apply()
 
                     fetchShelves()
@@ -93,7 +99,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             true
         }
 
-        title = getString(R.string.headline_shelves)
+        title = getString(R.string.app_name)
 
         recyclerView = findViewById(R.id.recyclerView)
         shelfAdapter = ShelfAdapter(shelfList, this, this, this)
@@ -103,10 +109,13 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         val sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE)
         userId = sharedPreferences.getInt("id", -1)
         shelfListId = sharedPreferences.getInt("shelfListId", -1)
+        shelfListName = sharedPreferences.getString("shelfListName", null)
 
-        if (userId == -1) {
+        if (shelfListName != null)
+            title = shelfListName
+
+        if (userId == -1)
             register()
-        }
         else
             fetchShelfLists()
 
@@ -136,6 +145,9 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     }
 
     override fun showMenuItems() {
+        isDrawerVisible = false
+        invalidateOptionsMenu()  // Force the menu to be recreated
+
         toolbar.menu.findItem(R.id.action_more).isVisible = true
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
@@ -143,6 +155,9 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     }
 
     private fun hideCheckboxes() {
+        isDrawerVisible = true
+        invalidateOptionsMenu()  // Force the menu to be recreated
+
         shelfAdapter.setAllCheckboxesVisible(false)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         supportActionBar?.setDisplayShowHomeEnabled(false)
@@ -152,6 +167,13 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_items, menu)
         menuInflater.inflate(R.menu.toolbar_menu, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        super.onPrepareOptionsMenu(menu)
+        menu?.findItem(R.id.action_drawer)?.isVisible = isDrawerVisible
+        menu?.findItem(R.id.action_more)?.isVisible = !isDrawerVisible
         return true
     }
 
@@ -831,7 +853,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
     private fun populateMenu(shelfLists: List<ShelfList>) {
         val menu = navView.menu
-        //menu.clear()  // Clear any existing items in the menu
 
         for (shelfList in shelfLists) {
             menu.add(Menu.NONE, shelfList.id, Menu.NONE, shelfList.name)

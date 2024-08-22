@@ -229,6 +229,8 @@ class ShelfAdapter(
                 notifyDataSetChanged()
             }*/
 
+            imageView.visibility = if (shelf.imageViewVisible) View.VISIBLE else View.GONE
+
             if (shelf.checkboxVisible) {
                 checkBox.visibility = View.VISIBLE
                 itemView.setOnClickListener {
@@ -294,6 +296,7 @@ class ShelfAdapter(
         for (shelf in shelfList) {
             shelf.checkboxVisible = visible
             selectedShelves.remove(shelf)
+            shelf.imageViewVisible = !visible
         }
         notifyDataSetChanged() // Notify the adapter to refresh the views
     }
