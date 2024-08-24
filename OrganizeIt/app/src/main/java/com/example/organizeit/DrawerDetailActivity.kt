@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.organizeit.adapters.ItemAdapter
 import com.example.organizeit.interfaces.ItemSelectionListener
 import com.example.organizeit.interfaces.MenuVisibilityListener
-import com.example.organizeit.interfaces.OnItemLongClickListener
 import com.example.organizeit.models.Item
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.util.ConfigUtil
@@ -46,7 +45,7 @@ class DrawerDetailActivity : AppCompatActivity(),
     private lateinit var newItem: Item
     private val itemList = mutableListOf<Item>()
     private var selectedItems: List<Item> = emptyList()
-    private var drawerId: Int = -1
+    private var drawerId: Long = -1
 
 
     private lateinit var moveItemResultLauncher: ActivityResultLauncher<Intent>
@@ -212,7 +211,7 @@ class DrawerDetailActivity : AppCompatActivity(),
         toolbar.setNavigationOnClickListener { hideCheckboxes() }
     }
 
-    private fun fetchItems(drawerId: Int) {
+    private fun fetchItems(drawerId: Long) {
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/item/getItemsByDrawerId?drawerId=$drawerId"
         val client = OkHttpClient()
         val request = Request.Builder()
@@ -249,11 +248,11 @@ class DrawerDetailActivity : AppCompatActivity(),
     private fun parseItem(jsonString: String): Item {
         val jsonObject = JSONObject(jsonString)
         val item = Item(
-            id = jsonObject.getInt("id"),
+            id = jsonObject.getLong("id"),
             name = jsonObject.getString("name"),
             desc = jsonObject.getString("desc"),
             quantity = jsonObject.getDouble("quantity"),
-            drawerId = jsonObject.getInt("drawerId")
+            drawerId = jsonObject.getLong("drawerId")
         )
 
         return item
@@ -266,11 +265,11 @@ class DrawerDetailActivity : AppCompatActivity(),
         for (i in 0 until jsonArray.length()) {
             val jsonObject = jsonArray.getJSONObject(i)
             val item = Item(
-                id = jsonObject.getInt("id"),
+                id = jsonObject.getLong("id"),
                 name = jsonObject.getString("name"),
                 desc = jsonObject.getString("desc"),
                 quantity = jsonObject.getDouble("quantity"),
-                drawerId = jsonObject.getInt("drawerId")
+                drawerId = jsonObject.getLong("drawerId")
             )
             itemList.add(item)
         }
@@ -396,7 +395,7 @@ class DrawerDetailActivity : AppCompatActivity(),
         })
     }
 
-    private fun updateItem(id: Int, name: String, desc: String, quantity: Double, oldItem: Item) {
+    private fun updateItem(id: Long, name: String, desc: String, quantity: Double, oldItem: Item) {
         val client = OkHttpClient()
         val jsonObject = JSONObject()
         jsonObject.put("id", id)
@@ -442,7 +441,7 @@ class DrawerDetailActivity : AppCompatActivity(),
         })
     }
 
-    private fun moveItem(id: Int, name: String, desc: String, quantity: Double, newDrawerId: Int) {
+    private fun moveItem(id: Long, name: String, desc: String, quantity: Double, newDrawerId: Int) {
         val client = OkHttpClient()
         val jsonObject = JSONObject()
         jsonObject.put("id", id)

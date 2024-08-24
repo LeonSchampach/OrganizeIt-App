@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.organizeit.R
-import com.example.organizeit.activities.LoginActivity.Companion
 import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.textfield.TextInputEditText
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

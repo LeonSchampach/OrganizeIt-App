@@ -33,7 +33,9 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: MoveItemAdapter
     private val shelfList = mutableListOf<Shelf>()
-    private var userId = -1
+    private var userId: Long = -1L
+    private var shelfListId: Long = -1L
+    private var shelfListName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,12 +54,13 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
         recyclerView.adapter = shelfAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
-        userId = sharedPreferences.getInt("id", -1)
+        val sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE)
+        userId = sharedPreferences.getLong("id", -1L)
+        shelfListId = sharedPreferences.getLong("shelfListId", -1L)
+        shelfListName = sharedPreferences.getString("shelfListName", null)
 
-        if (userId == -1) {
-            register()
-        }
+        if (shelfListName != null)
+            title = shelfListName
 
         fetchShelves()
     }
@@ -135,7 +138,7 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
     }
 
     private fun fetchShelves() {
-        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getAllShelf"
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getShelvesByShelfListId?shelfListId="+shelfListId
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
@@ -174,7 +177,7 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
 
         for (i in 0 until jsonArray.length()) {
             val jsonObject = jsonArray.getJSONObject(i)
-            val id = jsonObject.optInt("id", -1).takeIf { it != -1 }
+            val id = jsonObject.optLong("id", -1L).takeIf { it != -1L }
             val name = jsonObject.getString("name")
             val room = jsonObject.getString("room")
             val drawersJsonArray = jsonObject.getJSONArray("drawers")
@@ -182,10 +185,11 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
             val drawers = mutableListOf<Drawer>()
             for (j in 0 until drawersJsonArray.length()) {
                 val drawerJsonObject = drawersJsonArray.getJSONObject(j)
-                val drawerId = drawerJsonObject.optInt("id", -1).takeIf { it != -1 }
+                val drawerId = drawerJsonObject.optLong("id", -1L).takeIf { it != -1L }
                 val drawerName = drawerJsonObject.getString("name")
-                val shelfId = drawerJsonObject.optInt("shelfId")
-                drawers.add(Drawer(drawerId, drawerName, shelfId))
+                val drawerOrder = drawerJsonObject.getInt("order")
+                val shelfId = drawerJsonObject.optLong("shelfId")
+                drawers.add(Drawer(drawerId, drawerName, drawerOrder, shelfId))
             }
 
             shelves.add(Shelf(id, name, room, drawers, false))

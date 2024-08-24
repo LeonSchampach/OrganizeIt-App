@@ -20,18 +20,25 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Style.OrganizeIt">
+            <!-- Intent Filter for Launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Separate Intent Filter for Deep Linking -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="http"
+                    android:host="192.168.1.4:8080"
+                    android:pathPrefix="/app/deeplink" />
             </intent-filter>
         </activity>
         <activity
             android:name=".DrawerDetailActivity"
-            android:theme="@style/Style.OrganizeIt">
-        </activity>
-        <activity
-            android:name=".activities.LoginActivity"
             android:theme="@style/Style.OrganizeIt">
         </activity>
         <activity

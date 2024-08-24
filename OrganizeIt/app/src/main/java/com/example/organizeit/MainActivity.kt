@@ -1,6 +1,8 @@
 package com.example.organizeit
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,8 +10,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -54,10 +54,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private lateinit var navView: NavigationView
     private val shelfList = mutableListOf<Shelf>()
     private var selectedShelves: List<Shelf> = emptyList()
-    private var userId = -1
-    private var shelfListId = -1
+    private var userId: Long = -1L
+    private var shelfListId: Long = -1L
     private var shelfListName: String? = null
     private var isDrawerVisible = true
+    val shelfIdMap = mutableMapOf<Int, Long>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,14 +81,14 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     drawerLayout.closeDrawer(GravityCompat.END)
                 }*/
                 else -> {
-                    shelfListId = it.itemId
+                    shelfListId = shelfIdMap[it.itemId] ?: it.itemId.toLong()
                     shelfListName = it.title.toString()
 
                     title = shelfListName
 
                     val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
                     val editor = sharedPreferences.edit()
-                    editor.putInt("shelfListId", shelfListId)
+                    editor.putLong("shelfListId", shelfListId)
                     editor.putString("shelfListName", shelfListName)
                     editor.apply()
 
@@ -106,15 +107,21 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         recyclerView.adapter = shelfAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
+        /*val sharedPreferences1 = getSharedPreferences("UserData", Context.MODE_PRIVATE)
+        val editor = sharedPreferences1.edit()
+        editor.putLong("id", 1L)
+        editor.putLong("shelfListId", 1L)
+        editor.apply()*/
+
         val sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE)
-        userId = sharedPreferences.getInt("id", -1)
-        shelfListId = sharedPreferences.getInt("shelfListId", -1)
+        userId = sharedPreferences.getLong("id", -1L)
+        shelfListId = sharedPreferences.getLong("shelfListId", -1L)
         shelfListName = sharedPreferences.getString("shelfListName", null)
 
         if (shelfListName != null)
             title = shelfListName
 
-        if (userId == -1)
+        if (userId == -1L)
             register()
         else
             fetchShelfLists()
@@ -122,6 +129,24 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         // Floating action button click listener for adding a new shelf
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             showAddShelfDialog()
+        }
+        findViewById<FloatingActionButton>(R.id.share_fab).setOnClickListener {
+            shareList()
+        }
+
+        // Check if the intent has the data
+        val data: Uri? = intent?.data
+        if (data != null) {
+            val listIdParam = data.getQueryParameter("listId")
+            if (listIdParam != null) {
+                val listId = listIdParam.toLongOrNull() // Convert to Long safely
+                if (listId != null && listId > 0) {
+                    addUserShelfList(userId, listId) // Your function to call the backend API
+                } else {
+                    // Handle the error: listId is not a valid long
+                    Toast.makeText(this, "Invalid list ID", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         fetchShelves()
@@ -273,9 +298,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         dialog.show()
     }
 
-    private fun addItemToMenu(shelfListId: Int, shelfListName: String) {
+    private fun addItemToMenu(shelfListId: Long, shelfListName: String) {
         val menu = navView.menu
-        menu.add(Menu.NONE, shelfListId, Menu.NONE, shelfListName)
+        val generatedIntKey = shelfListId.hashCode()
+        shelfIdMap[generatedIntKey] = shelfListId
+        menu.add(Menu.NONE, generatedIntKey, Menu.NONE, shelfListName)
     }
 
     private fun addShelfList(listName: String) {
@@ -329,7 +356,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         })
     }
 
-    private fun addUserShelfList(userId: Int, shelfListId: Int) {
+    private fun addUserShelfList(userId: Long, shelfListId: Long) {
         val client = OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/userShelfList/createUserShelfList?userId="+userId+"&shelfListId="+shelfListId
         val requestBody = "".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
@@ -409,13 +436,13 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
                         val jsonObject = JSONObject(responseBody)
-                        val id = jsonObject.getInt("id")
+                        val id = jsonObject.getLong("id")
                         runOnUiThread {
                             userId = id
                             val sharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
                             val editor = sharedPreferences.edit()
                             if (id != null) {
-                                editor.putInt("id", id)
+                                editor.putLong("id", id)
                             }
                             editor.apply()
 
@@ -588,16 +615,16 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         for (i in 0 until drawersJsonArray.length()) {
             val drawerJson = drawersJsonArray.getJSONObject(i)
             val drawer = Drawer(
-                id = drawerJson.getInt("id"),
+                id = drawerJson.getLong("id"),
                 name = drawerJson.getString("name"),
                 order = drawerJson.getInt("order"),
-                shelfId = drawerJson.getInt("shelfId")
+                shelfId = drawerJson.getLong("shelfId")
             )
             drawersList.add(drawer)
         }
 
         val shelf = Shelf(
-            id = jsonObject.getInt("id"),
+            id = jsonObject.getLong("id"),
             name = jsonObject.getString("name"),
             room = jsonObject.getString("room"),
             drawers = drawersList
@@ -669,7 +696,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         })
     }
 
-    private fun updateShelf(id: Int, name: String, room: String, drawers: List<Drawer>, oldShelf: Shelf) {
+    private fun updateShelf(id: Long, name: String, room: String, drawers: List<Drawer>, oldShelf: Shelf) {
         val shelfListId = 1
 
         val jsonArray = JSONArray()
@@ -853,16 +880,15 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
     private fun populateMenu(shelfLists: List<ShelfList>) {
         val menu = navView.menu
-
-        for (shelfList in shelfLists) {
-            menu.add(Menu.NONE, shelfList.id, Menu.NONE, shelfList.name)
-        }
+        val generatedIntKey = shelfListId.hashCode()
+        shelfIdMap[generatedIntKey] = shelfListId
+        menu.add(Menu.NONE, generatedIntKey, Menu.NONE, shelfListName)
     }
 
     private fun parseShelfList(jsonString: String): ShelfList {
         val jsonObject = JSONObject(jsonString)
 
-        val id = jsonObject.getInt("id")
+        val id = jsonObject.getLong("id")
         val name = jsonObject.getString("name")
 
         return ShelfList(id, name)
@@ -874,7 +900,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
         for (i in 0 until jsonArray.length()) {
             val jsonObject = jsonArray.getJSONObject(i)
-            val id = jsonObject.getInt("id")
+            val id = jsonObject.getLong("id")
             val name = jsonObject.getString("name")
 
             shelfLists.add(ShelfList(id, name))
@@ -891,7 +917,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
         for (i in 0 until jsonArray.length()) {
             val jsonObject = jsonArray.getJSONObject(i)
-            val id = jsonObject.optInt("id", -1).takeIf { it != -1 }
+            val id = jsonObject.optLong("id", -1L).takeIf { it != -1L }
             val name = jsonObject.getString("name")
             val room = jsonObject.getString("room")
             val drawersJsonArray = jsonObject.getJSONArray("drawers")
@@ -899,10 +925,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             val drawers = mutableListOf<Drawer>()
             for (j in 0 until drawersJsonArray.length()) {
                 val drawerJsonObject = drawersJsonArray.getJSONObject(j)
-                val drawerId = drawerJsonObject.optInt("id", -1).takeIf { it != -1 }
+                val drawerId = drawerJsonObject.optLong("id", -1L).takeIf { it != -1L }
                 val drawerName = drawerJsonObject.getString("name")
                 val drawerOrder = drawerJsonObject.getInt("order")
-                val shelfId = drawerJsonObject.optInt("shelfId")
+                val shelfId = drawerJsonObject.optLong("shelfId")
                 drawers.add(Drawer(drawerId, drawerName, drawerOrder, shelfId))
             }
 
@@ -947,5 +973,51 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 }
             }
         })
+    }
+
+    private fun shareList() {
+        var shortLink: String = ""
+
+        val client = OkHttpClient()
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/short-links/generate?listId="+shelfListId
+        val requestBody = "".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url(apiUrl)
+            .post(requestBody)
+            .build()
+
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                Log.e(TAG, "Error generating link", e)
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (response.isSuccessful) {
+                    Log.d(TAG, "ShelfList added successfully")
+
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        shortLink = responseBody
+
+                        runOnUiThread {
+                            if (shortLink.isNotEmpty()) {
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, "Check out this list: $shortLink")
+                                }
+                                startActivity(Intent.createChooser(shareIntent, "Share link using"))
+                            }
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Failed to add shelfList: ${response.body?.string()}")
+                }
+            }
+        })
+
+        //shortLink = "https://yourdomain.com/l/" + generatedShortId
+
+
     }
 }
