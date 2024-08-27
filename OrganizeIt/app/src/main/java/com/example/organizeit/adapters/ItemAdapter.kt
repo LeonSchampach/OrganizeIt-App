@@ -17,6 +17,9 @@ import com.example.organizeit.interfaces.ItemSelectionListener
 import com.example.organizeit.interfaces.MenuVisibilityListener
 import com.example.organizeit.interfaces.OnItemLongClickListener
 import com.example.organizeit.models.Item
+import com.example.organizeit.ssl_certificate.TrustAllCertificates
+import com.example.organizeit.ssl_certificate.TrustAllHostnames
+import com.example.organizeit.ssl_certificate.TrustAllSSLSocketFactory
 import com.example.organizeit.util.ConfigUtil
 import okhttp3.Call
 import okhttp3.Callback
@@ -36,8 +39,9 @@ class ItemAdapter(
     private val itemSelectionListener: ItemSelectionListener
 ) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
-    private var fullItemList: MutableList<Item> = itemList.toMutableList()
+    private val secure = false
 
+    private var fullItemList: MutableList<Item> = itemList.toMutableList()
     private val selectedItems = mutableListOf<Item>()
 
     inner class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -107,10 +111,12 @@ class ItemAdapter(
             }
 
             increaseQuantity.setOnClickListener {
+                itemQuantity.text = formatNumber(item.quantity + 1)
                 changeQuantity(item, 1, context, adapter)
             }
 
             decreaseQuantity.setOnClickListener {
+                itemQuantity.text = formatNumber(item.quantity - 1)
                 changeQuantity(item, -1, context, adapter)
             }
         }
@@ -142,7 +148,10 @@ class ItemAdapter(
     }
 
     fun deleteItem(item: Item, context: Context, adapter: ItemAdapter) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/item/deleteItem?id=${item.id}"
 
         selectedItems.remove(item)
@@ -185,7 +194,10 @@ class ItemAdapter(
         jsonObject.put("quantity", item.quantity + incOrDec)
         jsonObject.put("drawerId", item.drawerId)
 
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/item/updateItem"
         val requestBody = jsonObject.toString()
             .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())

@@ -16,6 +16,9 @@ import com.example.organizeit.MainActivity
 import com.example.organizeit.R
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
+import com.example.organizeit.ssl_certificate.TrustAllCertificates
+import com.example.organizeit.ssl_certificate.TrustAllHostnames
+import com.example.organizeit.ssl_certificate.TrustAllSSLSocketFactory
 import com.example.organizeit.util.ConfigUtil
 import okhttp3.Call
 import okhttp3.Callback
@@ -25,6 +28,8 @@ import okhttp3.Response
 import java.io.IOException
 
 class DrawerAdapter(private val drawers: MutableList<Drawer>, private val context: Context) : RecyclerView.Adapter<DrawerAdapter.DrawerViewHolder>() {
+
+    private val secure = false
 
     inner class DrawerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val drawerNameInput: EditText = view.findViewById(R.id.drawerNameInput)
@@ -95,7 +100,10 @@ class DrawerAdapter(private val drawers: MutableList<Drawer>, private val contex
     fun getDrawers(): MutableList<Drawer> = drawers
 
     private fun deleteDrawer(drawer: Drawer, context: Context) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/drawer/deleteDrawer?id=${drawer.id}"
 
         val request = Request.Builder()

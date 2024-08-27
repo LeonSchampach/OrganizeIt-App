@@ -27,18 +27,23 @@
             </intent-filter>
 
             <!-- Separate Intent Filter for Deep Linking -->
-            <intent-filter>
+            <!--<intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="http"
-                    android:host="192.168.1.4:8080"
+                    android:scheme="https"
+                    android:host="192.168.1.4"
+                    android:port="8443"
                     android:pathPrefix="/app/deeplink" />
-            </intent-filter>
+            </intent-filter>-->
         </activity>
         <activity
             android:name=".DrawerDetailActivity"
+            android:theme="@style/Style.OrganizeIt">
+        </activity>
+        <activity
+            android:name=".activities.ShareActivity"
             android:theme="@style/Style.OrganizeIt">
         </activity>
         <activity

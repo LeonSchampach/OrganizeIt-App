@@ -4,6 +4,10 @@
         android:id="@+id/nav_item1"
         android:title="@string/add_list"
         android:icon="@drawable/ic_add" />
+    <item
+        android:id="@+id/nav_item2"
+        android:title="@string/import_list"
+        android:icon="@drawable/ic_import" />
     <!--<item
         android:id="@+id/nav_item2"
         android:title="Item 2"

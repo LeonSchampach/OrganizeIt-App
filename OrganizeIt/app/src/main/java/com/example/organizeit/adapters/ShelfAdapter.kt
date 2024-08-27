@@ -20,6 +20,9 @@ import com.example.organizeit.interfaces.MenuVisibilityListener
 import com.example.organizeit.interfaces.ShelfSelectionListener
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
+import com.example.organizeit.ssl_certificate.TrustAllCertificates
+import com.example.organizeit.ssl_certificate.TrustAllHostnames
+import com.example.organizeit.ssl_certificate.TrustAllSSLSocketFactory
 import com.example.organizeit.util.ConfigUtil
 import okhttp3.Call
 import okhttp3.Callback
@@ -39,6 +42,8 @@ class ShelfAdapter(
         const val ITEM_TYPE_SHELF = 0
         const val ITEM_TYPE_DRAWER = 1
     }
+
+    private val secure = false
 
     private val selectedShelves = mutableListOf<Shelf>()
 
@@ -332,7 +337,10 @@ class ShelfAdapter(
     }
 
     fun deleteShelf(shelf: Shelf, context: Context) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/shelf/deleteShelf?id=${shelf.id}"
 
         selectedShelves.remove(shelf)

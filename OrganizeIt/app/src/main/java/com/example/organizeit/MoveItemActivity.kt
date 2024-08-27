@@ -16,6 +16,9 @@ import com.example.organizeit.adapters.ShelfAdapter
 import com.example.organizeit.interfaces.OnDrawerClickListener
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
+import com.example.organizeit.ssl_certificate.TrustAllCertificates
+import com.example.organizeit.ssl_certificate.TrustAllHostnames
+import com.example.organizeit.ssl_certificate.TrustAllSSLSocketFactory
 import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.OkHttpClient
@@ -29,6 +32,8 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
     companion object {
         private const val TAG = "MainActivity"
     }
+
+    private val secure = false
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: MoveItemAdapter
@@ -84,7 +89,10 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
     }
 
     private fun register() {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/user/register"
         val request = Request.Builder()
             .url(apiUrl)
@@ -139,7 +147,10 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
 
     private fun fetchShelves() {
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getShelvesByShelfListId?shelfListId="+shelfListId
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
             .build()

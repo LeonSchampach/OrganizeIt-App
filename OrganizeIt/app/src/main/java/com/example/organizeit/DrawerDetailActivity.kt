@@ -22,6 +22,9 @@ import com.example.organizeit.interfaces.ItemSelectionListener
 import com.example.organizeit.interfaces.MenuVisibilityListener
 import com.example.organizeit.models.Item
 import com.example.organizeit.models.Drawer
+import com.example.organizeit.ssl_certificate.TrustAllCertificates
+import com.example.organizeit.ssl_certificate.TrustAllHostnames
+import com.example.organizeit.ssl_certificate.TrustAllSSLSocketFactory
 import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.*
@@ -36,6 +39,8 @@ class DrawerDetailActivity : AppCompatActivity(),
     companion object {
         private const val TAG = "DrawerDetailActivity"
     }
+    
+    private val secure = false
 
     private lateinit var toolbar: Toolbar
     private lateinit var itemAdapter: ItemAdapter
@@ -213,7 +218,10 @@ class DrawerDetailActivity : AppCompatActivity(),
 
     private fun fetchItems(drawerId: Long) {
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/item/getItemsByDrawerId?drawerId=$drawerId"
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
             .build()
@@ -351,7 +359,10 @@ class DrawerDetailActivity : AppCompatActivity(),
     }
 
     private fun addItem(name: String, desc: String, quantity: Double) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val jsonObject = JSONObject()
         jsonObject.put("name", name)
         jsonObject.put("desc", desc)
@@ -396,7 +407,10 @@ class DrawerDetailActivity : AppCompatActivity(),
     }
 
     private fun updateItem(id: Long, name: String, desc: String, quantity: Double, oldItem: Item) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val jsonObject = JSONObject()
         jsonObject.put("id", id)
         jsonObject.put("name", name)
@@ -442,7 +456,10 @@ class DrawerDetailActivity : AppCompatActivity(),
     }
 
     private fun moveItem(id: Long, name: String, desc: String, quantity: Double, newDrawerId: Int) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val jsonObject = JSONObject()
         jsonObject.put("id", id)
         jsonObject.put("name", name)

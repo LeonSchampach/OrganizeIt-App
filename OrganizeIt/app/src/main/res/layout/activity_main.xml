@@ -25,8 +25,7 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.DayNight"
-                app:menu="@menu/toolbar_menu" />
+                app:popupTheme="@style/ThemeOverlay.AppCompat.DayNight" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -53,7 +52,7 @@
         app:backgroundTint="@color/fabColor"
         app:backgroundTintMode="add" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <!--<com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/share_fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -61,7 +60,7 @@
             android:layout_alignParentBottom="true"
             android:layout_margin="16dp"
             android:clickable="true"
-            app:srcCompat="@drawable/baseline_share_24" />
+            app:srcCompat="@drawable/baseline_share_24" />-->
 
     </RelativeLayout>
 
@@ -70,17 +69,17 @@
         android:id="@+id/navigation_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity="end"
+        android:layout_gravity="start"
         app:menu="@menu/drawer_menu"
         android:backgroundTint="@color/backgroundColor"
         >
 
-        <LinearLayout
+        <!--<LinearLayout
             android:id="@+id/menu_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:orientation="vertical" />
+            android:orientation="vertical" />-->
 
     </com.google.android.material.navigation.NavigationView>
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -10,7 +10,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
@@ -20,6 +22,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.organizeit.activities.ShareActivity
 import com.example.organizeit.adapters.DrawerAdapter
 import com.example.organizeit.adapters.ShelfAdapter
 import com.example.organizeit.interfaces.MenuVisibilityListener
@@ -27,6 +30,9 @@ import com.example.organizeit.interfaces.ShelfSelectionListener
 import com.example.organizeit.models.Drawer
 import com.example.organizeit.models.Shelf
 import com.example.organizeit.models.ShelfList
+import com.example.organizeit.ssl_certificate.TrustAllCertificates
+import com.example.organizeit.ssl_certificate.TrustAllHostnames
+import com.example.organizeit.ssl_certificate.TrustAllSSLSocketFactory
 import com.example.organizeit.util.ConfigUtil
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
@@ -46,11 +52,14 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     companion object {
         private const val TAG = "MainActivity"
     }
+    
+    private val secure = false
 
     private lateinit var toolbar: Toolbar
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: ShelfAdapter
     private lateinit var drawerLayout: DrawerLayout
+    private lateinit var toggle: ActionBarDrawerToggle
     private lateinit var navView: NavigationView
     private val shelfList = mutableListOf<Shelf>()
     private var selectedShelves: List<Shelf> = emptyList()
@@ -58,7 +67,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private var shelfListId: Long = -1L
     private var shelfListName: String? = null
     private var isDrawerVisible = true
-    val shelfIdMap = mutableMapOf<Int, Long>()
+    private val shelfIdMap = mutableMapOf<Int, Long>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,16 +79,19 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         drawerLayout = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.navigation_view)
 
+        toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
         navView.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.nav_item1 -> {
                     // Handle navigation to Item 1
                     showAddItemDialog()
                 }
-                /*R.id.nav_item2 -> {
-                    // Handle navigation to Item 2
-                    drawerLayout.closeDrawer(GravityCompat.END)
-                }*/
+                R.id.nav_item2 -> {
+                    showImportListDialog()
+                }
                 else -> {
                     shelfListId = shelfIdMap[it.itemId] ?: it.itemId.toLong()
                     shelfListName = it.title.toString()
@@ -93,7 +105,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     editor.apply()
 
                     fetchShelves()
-                    drawerLayout.closeDrawer(GravityCompat.END)
+                    drawerLayout.closeDrawer(GravityCompat.START)
                 }
                 // Add more cases as needed
             }
@@ -109,8 +121,8 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
         /*val sharedPreferences1 = getSharedPreferences("UserData", Context.MODE_PRIVATE)
         val editor = sharedPreferences1.edit()
-        editor.putLong("id", 1L)
-        editor.putLong("shelfListId", 1L)
+        editor.putLong("id", -1L)
+        //editor.putLong("shelfListId", 1L)
         editor.apply()*/
 
         val sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE)
@@ -130,9 +142,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             showAddShelfDialog()
         }
-        findViewById<FloatingActionButton>(R.id.share_fab).setOnClickListener {
+
+        //
+        /*findViewById<FloatingActionButton>(R.id.share_fab).setOnClickListener {
             shareList()
-        }
+        }*/
 
         // Check if the intent has the data
         val data: Uri? = intent?.data
@@ -173,7 +187,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         isDrawerVisible = false
         invalidateOptionsMenu()  // Force the menu to be recreated
 
-        toolbar.menu.findItem(R.id.action_more).isVisible = true
+        //toolbar.menu.findItem(R.id.action_more).isVisible = true
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
         toolbar.setNavigationOnClickListener { hideCheckboxes() }
@@ -186,19 +200,13 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         shelfAdapter.setAllCheckboxesVisible(false)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         supportActionBar?.setDisplayShowHomeEnabled(false)
-        toolbar.menu.findItem(R.id.action_more).isVisible = false
+        //toolbar.menu.findItem(R.id.action_more).isVisible = false
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_items, menu)
-        menuInflater.inflate(R.menu.toolbar_menu, menu)
-        return true
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        super.onPrepareOptionsMenu(menu)
-        menu?.findItem(R.id.action_drawer)?.isVisible = isDrawerVisible
-        menu?.findItem(R.id.action_more)?.isVisible = !isDrawerVisible
+        //menuInflater.inflate(R.menu.main_menu, menu)
+        //menuInflater.inflate(R.menu.toolbar_menu, menu)
         return true
     }
 
@@ -209,21 +217,21 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 showOptionsMenu()
                 true
             }
-            R.id.action_drawer -> {
-                if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
-                    drawerLayout.closeDrawer(GravityCompat.END)
+            /*R.id.action_drawer -> {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START)
                 } else {
-                    drawerLayout.openDrawer(GravityCompat.END)
+                    drawerLayout.openDrawer(GravityCompat.START)
                 }
                 true
-            }
+            }*/
             else -> super.onOptionsItemSelected(item)
         }
     }
 
     override fun onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
-            drawerLayout.closeDrawer(GravityCompat.END)
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
         } else {
             super.onBackPressed()
         }
@@ -234,25 +242,32 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         popup.menuInflater.inflate(R.menu.menu_popup, popup.menu)
         popup.menu.findItem(R.id.move).isVisible = false
 
-        if (selectedShelves.size == 1) {
-            popup.menu.findItem(R.id.edit).isVisible = true
-        } else {
-            popup.menu.findItem(R.id.edit).isVisible = false
-        }
+        popup.menu.findItem(R.id.edit).isVisible = selectedShelves.size == 1 && !isDrawerVisible
 
-        if (selectedShelves.isNotEmpty()) {
-            popup.setOnMenuItemClickListener { menuItem ->
-                when (menuItem.itemId) {
-                    R.id.edit -> {
-                        handleOptionSelection(1)
-                        true
-                    }
-                    R.id.delete -> {
-                        handleOptionSelection(3)
-                        true
-                    }
-                    else -> false
+        popup.menu.findItem(R.id.delete).isVisible = !isDrawerVisible
+
+        popup.menu.findItem(R.id.share).isVisible = shelfListId != -1L && isDrawerVisible
+        popup.menu.findItem(R.id.deleteList).isVisible = shelfListId != -1L && isDrawerVisible
+
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.edit -> {
+                    handleOptionSelection(1)
+                    true
                 }
+                R.id.delete -> {
+                    handleOptionSelection(3)
+                    true
+                }
+                R.id.share -> {
+                    handleOptionSelection(4)
+                    true
+                }
+                R.id.deleteList -> {
+                    handleOptionSelection(5)
+                    true
+                }
+                else -> false
             }
         }
 
@@ -273,6 +288,14 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 for (shelf in shelves) {
                     shelfAdapter.deleteShelf(shelf, this)
                 }
+            }
+            4 -> {
+                val intent = Intent(this, ShareActivity::class.java)
+                intent.putExtra("listId", shelfListId)
+                startActivity(intent)
+            }
+            5 -> {
+
             }
         }
     }
@@ -298,6 +321,27 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         dialog.show()
     }
 
+    private fun showImportListDialog() {
+        // Inflate the dialog layout
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_shelf_list_by_id, null)
+        val editText = dialogView.findViewById<EditText>(R.id.editTextShelfListId)
+
+        // Create and show the dialog
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.import_list))
+            .setView(dialogView)
+            .setPositiveButton(getString(R.string.importBtn)) { _, _ ->
+                val listId = editText.text.toString().toLong()
+                if (listId != -1L) {
+                    addUserShelfList(userId, listId)
+                }
+            }
+            .setNegativeButton(getString(R.string.cancelBtn), null)
+            .create()
+
+        dialog.show()
+    }
+
     private fun addItemToMenu(shelfListId: Long, shelfListName: String) {
         val menu = navView.menu
         val generatedIntKey = shelfListId.hashCode()
@@ -306,7 +350,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     }
 
     private fun addShelfList(listName: String) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelfList/createShelfList?name="+listName
         val requestBody = "".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
@@ -357,7 +404,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     }
 
     private fun addUserShelfList(userId: Long, shelfListId: Long) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/userShelfList/createUserShelfList?userId="+userId+"&shelfListId="+shelfListId
         val requestBody = "".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
@@ -385,6 +435,8 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                         Log.d(TAG, "UserShelfList added successfully")
                     }
 
+                    fetchShelfLists()
+
                     /*val responseBody = response.body?.string()
                     if (responseBody != null) {
                         val newUserShelfList = parseUserShelfList(responseBody)
@@ -407,7 +459,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     }
 
     private fun register() {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/user/register"
         val request = Request.Builder()
             .url(apiUrl)
@@ -445,8 +500,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                                 editor.putLong("id", id)
                             }
                             editor.apply()
-
-                            fetchShelfLists()
                         }
                     }
                 } else {
@@ -647,7 +700,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         jsonObject.put("shelfListId", shelfListId)
         jsonObject.put("drawers", jsonArray)
 
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/createShelf"
         val requestBody = jsonObject.toString()
             .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
@@ -723,7 +779,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         jsonObject.put("shelfListId", shelfListId)
         jsonObject.put("drawers", jsonArray)
 
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/updateShelf"
         val requestBody = jsonObject.toString()
             .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
@@ -774,7 +833,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
     /*private fun fetchShelves() {
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getAllShelves"
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
             .build()
@@ -808,7 +870,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
     private fun fetchShelves() {
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelf/getShelvesByShelfListId?shelfListId="+shelfListId
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
             .build()
@@ -842,7 +907,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
     private fun fetchShelfLists() {
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelfList/getAllShelfListsByUserId?userId="+userId
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val request = Request.Builder()
             .url(apiUrl)
             .build()
@@ -865,10 +933,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
                         val shelfLists = parseShelfLists(responseBody)
-                        runOnUiThread {
-                            populateMenu(shelfLists)
+                        if (shelfLists.isNotEmpty()) {
+                            runOnUiThread {
+                                populateMenu(shelfLists)
+                            }
                         }
-
                         /*runOnUiThread {
                             shelfAdapter.setShelves(shelfList)
                         }*/
@@ -880,9 +949,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
 
     private fun populateMenu(shelfLists: List<ShelfList>) {
         val menu = navView.menu
-        val generatedIntKey = shelfListId.hashCode()
-        shelfIdMap[generatedIntKey] = shelfListId
-        menu.add(Menu.NONE, generatedIntKey, Menu.NONE, shelfListName)
+        for (shelfList in shelfLists) {
+            val generatedIntKey = shelfList.id.hashCode()
+            shelfIdMap[generatedIntKey] = shelfList.id
+            menu.add(Menu.NONE, generatedIntKey, Menu.NONE, shelfList.name)
+        }
     }
 
     private fun parseShelfList(jsonString: String): ShelfList {
@@ -943,7 +1014,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     }
 
     private fun deleteDrawer(drawer: Drawer, context: Context) {
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(context)}/drawer/deleteDrawer?id=${drawer.id}"
 
         val request = Request.Builder()
@@ -978,7 +1052,10 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private fun shareList() {
         var shortLink: String = ""
 
-        val client = OkHttpClient()
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
         val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/short-links/generate?listId="+shelfListId
         val requestBody = "".toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()

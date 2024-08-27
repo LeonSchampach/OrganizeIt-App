@@ -41,4 +41,13 @@
     <string name="drawer">Lade</string>
     <string name="add_list">Liste hinzufügen</string>
     <string name="add_shelf_list">Liste hinzufügen</string>
+    <string name="navigation_drawer_open">Menü öffnen</string>
+    <string name="navigation_drawer_close">Menü schließen</string>
+    <string name="share">Teilen</string>
+    <string name="deleteList">Liste löschen</string>
+    <string name="share_text">"ID der Liste: "</string>
+    <string name="import_list">Liste importieren</string>
+    <string name="listName">Name der Liste</string>
+    <string name="listId">ID der Liste</string>
+    <string name="importBtn">Importieren</string>
 </resources>
