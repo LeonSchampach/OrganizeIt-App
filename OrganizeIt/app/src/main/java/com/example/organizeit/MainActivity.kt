@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     private var shelfListName: String? = null
     private var isDrawerVisible = true
     private val shelfIdMap = mutableMapOf<Int, Long>()
+    private var shelfLists = mutableListOf<ShelfList>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -295,7 +296,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 startActivity(intent)
             }
             5 -> {
-
+                deleteShelfList(shelfListId)
             }
         }
     }
@@ -445,13 +446,71 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                         }
                     }*/
                 } else {
+                    Log.e(TAG, "Failed to add userShelfList: ${response.body?.string()}")
                     runOnUiThread {
                         Toast.makeText(
                             this@MainActivity,
                             "Failed to add userShelfList",
                             Toast.LENGTH_SHORT
                         ).show()
-                        Log.e(TAG, "Failed to add userShelfList: ${response.body?.string()}")
+                    }
+                }
+            }
+        })
+    }
+
+    private fun deleteShelfList(listId: Long) {
+        val client = if (secure) OkHttpClient.Builder()
+            .sslSocketFactory(TrustAllSSLSocketFactory.getSocketFactory(), TrustAllCertificates())
+            .hostnameVerifier(TrustAllHostnames())
+            .build() else OkHttpClient()
+        val apiUrl = "${ConfigUtil.getApiBaseUrl(this)}/shelfList/deleteShelfList?listId=${listId}"
+
+        val request = Request.Builder()
+            .url(apiUrl)
+            .delete()
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Error deleting ShelfList", e)
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "ShelfList deleted successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.d(TAG, "ShelfList deleted successfully")
+                    }
+
+                    //fetchShelfLists()
+
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val deletedUserShelfList = parseShelfList(responseBody)
+                        shelfListId = -1
+                        shelfListName = null
+                        shelfLists.remove(deletedUserShelfList)
+                        runOnUiThread {
+                            title = getString(R.string.app_name)
+                            populateMenu()
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Failed to delete ShelfList: ${response.body?.string()}")
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Failed to delete ShelfList",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -932,10 +991,11 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                 } else {
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
-                        val shelfLists = parseShelfLists(responseBody)
-                        if (shelfLists.isNotEmpty()) {
+                        val parsedShelfLists = parseShelfLists(responseBody)
+                        if (parsedShelfLists.isNotEmpty()) {
+                            shelfLists = parsedShelfLists.toMutableList()
                             runOnUiThread {
-                                populateMenu(shelfLists)
+                                populateMenu()
                             }
                         }
                         /*runOnUiThread {
@@ -947,8 +1007,20 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         })
     }
 
-    private fun populateMenu(shelfLists: List<ShelfList>) {
+    private fun populateMenu() {
         val menu = navView.menu
+
+        // IDs of the standard items that should remain
+        val standardItemIds = setOf(R.id.nav_item1, R.id.nav_item2)
+
+        // Iterate through the menu items in reverse order to avoid index issues while removing items
+        for (i in menu.size() - 1 downTo 0) {
+            val item = menu.getItem(i)
+            if (item.itemId !in standardItemIds) {
+                menu.removeItem(item.itemId) // Remove the item if it's not one of the standard items
+            }
+        }
+
         for (shelfList in shelfLists) {
             val generatedIntKey = shelfList.id.hashCode()
             shelfIdMap[generatedIntKey] = shelfList.id
