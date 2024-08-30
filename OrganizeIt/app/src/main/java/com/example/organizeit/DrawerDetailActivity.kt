@@ -40,7 +40,7 @@ class DrawerDetailActivity : AppCompatActivity(),
         private const val TAG = "DrawerDetailActivity"
     }
     
-    private val secure = false
+    private var secure = false
 
     private lateinit var toolbar: Toolbar
     private lateinit var itemAdapter: ItemAdapter
@@ -58,6 +58,8 @@ class DrawerDetailActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_drawer_detail)
+
+        secure = ConfigUtil.isSecure(this)
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)

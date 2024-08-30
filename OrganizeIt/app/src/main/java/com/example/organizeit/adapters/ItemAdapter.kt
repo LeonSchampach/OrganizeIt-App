@@ -39,7 +39,7 @@ class ItemAdapter(
     private val itemSelectionListener: ItemSelectionListener
 ) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
-    private val secure = false
+    private val secure = ConfigUtil.isSecure(context)
 
     private var fullItemList: MutableList<Item> = itemList.toMutableList()
     private val selectedItems = mutableListOf<Item>()
@@ -178,7 +178,6 @@ class ItemAdapter(
                     }
                 } else {
                     (context as? DrawerDetailActivity)?.runOnUiThread {
-                        Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT).show()
                         adapter.removeItem(item)
                     }
                 }

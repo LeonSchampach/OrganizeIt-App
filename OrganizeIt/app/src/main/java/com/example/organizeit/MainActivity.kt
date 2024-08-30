@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         private const val TAG = "MainActivity"
     }
     
-    private val secure = false
+    private var secure = false
 
     private lateinit var toolbar: Toolbar
     private lateinit var recyclerView: RecyclerView
@@ -73,6 +73,8 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        secure = ConfigUtil.isSecure(this)
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -108,7 +110,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     fetchShelves()
                     drawerLayout.closeDrawer(GravityCompat.START)
                 }
-                // Add more cases as needed
             }
             true
         }
@@ -150,7 +151,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         }*/
 
         // Check if the intent has the data
-        val data: Uri? = intent?.data
+        /*val data: Uri? = intent?.data
         if (data != null) {
             val listIdParam = data.getQueryParameter("listId")
             if (listIdParam != null) {
@@ -162,7 +163,7 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     Toast.makeText(this, "Invalid list ID", Toast.LENGTH_SHORT).show()
                 }
             }
-        }
+        }*/
 
         fetchShelves()
     }
@@ -374,11 +375,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 if (response.isSuccessful) {
                     runOnUiThread {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "ShelfList added successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         Log.d(TAG, "ShelfList added successfully")
                     }
 
@@ -428,11 +424,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 if (response.isSuccessful) {
                     runOnUiThread {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "UserShelfList added successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         Log.d(TAG, "UserShelfList added successfully")
                     }
 
@@ -482,11 +473,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 if (response.isSuccessful) {
                     runOnUiThread {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "ShelfList deleted successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         Log.d(TAG, "ShelfList deleted successfully")
                     }
 
@@ -539,11 +525,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 if (response.isSuccessful) {
                     runOnUiThread {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Successfully registered",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         Log.d(TAG, "Successfully registered")
                     }
 
@@ -782,11 +763,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 if (response.isSuccessful) {
                     runOnUiThread {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Shelf added successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         Log.d(TAG, "Shelf added successfully")
                     }
 
@@ -861,11 +837,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 if (response.isSuccessful) {
                     runOnUiThread {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Shelf updated successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         Log.d(TAG, "Shelf updated successfully")
                     }
 
@@ -1113,7 +1084,6 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
                     }
                 } else {
                     (context as? MainActivity)?.runOnUiThread {
-                        Toast.makeText(context, "Drawer deleted successfully", Toast.LENGTH_SHORT).show()
                         shelfAdapter.removeDrawer(drawer)
                     }
                 }

@@ -33,7 +33,7 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
         private const val TAG = "MainActivity"
     }
 
-    private val secure = false
+    private var secure = false
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var shelfAdapter: MoveItemAdapter
@@ -45,6 +45,8 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_move_item)
+
+        secure = ConfigUtil.isSecure(this)
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -110,11 +112,6 @@ class MoveItemActivity : AppCompatActivity(), OnDrawerClickListener {
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 if (response.isSuccessful) {
                     runOnUiThread {
-                        Toast.makeText(
-                            this@MoveItemActivity,
-                            "Successfully registered",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         Log.d(TAG, "Successfully registered")
                     }
 

@@ -43,7 +43,7 @@ class ShelfAdapter(
         const val ITEM_TYPE_DRAWER = 1
     }
 
-    private val secure = false
+    private val secure = ConfigUtil.isSecure(context)
 
     private val selectedShelves = mutableListOf<Shelf>()
 
@@ -367,7 +367,6 @@ class ShelfAdapter(
                     }
                 } else {
                     (context as? MainActivity)?.runOnUiThread {
-                        Toast.makeText(context, "Shelf deleted successfully", Toast.LENGTH_SHORT).show()
                         removeShelf(shelf)
                     }
                 }

@@ -18,4 +18,15 @@ object ConfigUtil {
         }
         return properties.getProperty("api_base_url", "http://192.168.1.4:8080")
     }
+
+    fun isSecure(context: Context): Boolean {
+        val properties = Properties()
+        try {
+            val inputStream = context.assets.open(PROPERTIES_FILE)
+            properties.load(inputStream)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return properties.getProperty("secure", "false").toBoolean()
+    }
 }

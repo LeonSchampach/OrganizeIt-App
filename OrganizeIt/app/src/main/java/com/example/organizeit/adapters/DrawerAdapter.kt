@@ -29,7 +29,7 @@ import java.io.IOException
 
 class DrawerAdapter(private val drawers: MutableList<Drawer>, private val context: Context) : RecyclerView.Adapter<DrawerAdapter.DrawerViewHolder>() {
 
-    private val secure = false
+    private val secure = ConfigUtil.isSecure(context)
 
     inner class DrawerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val drawerNameInput: EditText = view.findViewById(R.id.drawerNameInput)
@@ -127,7 +127,6 @@ class DrawerAdapter(private val drawers: MutableList<Drawer>, private val contex
                     }
                 } else {
                     (context as? MainActivity)?.runOnUiThread {
-                        Toast.makeText(context, "Drawer deleted successfully", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
