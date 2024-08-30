@@ -19,6 +19,8 @@ class ShareActivity: AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
+        toolbar.setNavigationOnClickListener { finish() }
+
         title = getString(R.string.share)
 
         val listId = intent.getLongExtra("listId", -1)
