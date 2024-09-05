@@ -189,7 +189,8 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         isDrawerVisible = false
         invalidateOptionsMenu()  // Force the menu to be recreated
 
-        //toolbar.menu.findItem(R.id.action_more).isVisible = true
+        // Disable the hamburger icon and show the back arrow
+        toggle.isDrawerIndicatorEnabled = false
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
         toolbar.setNavigationOnClickListener { hideCheckboxes() }
@@ -200,9 +201,16 @@ class MainActivity : AppCompatActivity(), MenuVisibilityListener, ShelfSelection
         invalidateOptionsMenu()  // Force the menu to be recreated
 
         shelfAdapter.setAllCheckboxesVisible(false)
+
+        // Hide the back arrow
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         supportActionBar?.setDisplayShowHomeEnabled(false)
-        //toolbar.menu.findItem(R.id.action_more).isVisible = false
+
+        // Restore the ActionBarDrawerToggle (hamburger icon)
+        toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        toggle.isDrawerIndicatorEnabled = true
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState() // Sync the state of the toggle to display the hamburger icon
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
